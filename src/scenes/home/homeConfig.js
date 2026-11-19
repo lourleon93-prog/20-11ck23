@@ -1,8 +1,9 @@
 /**
  * Cấu hình trang chủ (danh mục cột chỉ đường).
- * Các giá trị góc tính theo độ; azimuth 0° = camera nằm phía +Z của model (quy ước glTF "front").
- * Hướng thật của model chưa kiểm tra được (GLB đang nằm trên Git LFS) — chỉnh frontAzimuthDeg
- * nếu góc nhìn ban đầu không đúng mặt trước.
+ * Các giá trị góc tính theo độ; azimuth 0° = camera nằm phía +Z của model.
+ *
+ * Đã kiểm tra trên models/Home.glb: mỗi biển là 1 mặt phẳng ảnh (4 đỉnh, vật liệu hai mặt)
+ * gắn trên một tấm bảng; mặt đọc được nằm theo chiều pháp tuyến của mặt phẳng.
  */
 export const HOME_CONFIG = {
   model: 'models/Home.glb',
@@ -14,8 +15,13 @@ export const HOME_CONFIG = {
     { mesh: 'Untitled61_20261117005624', section: 'crystal', label: 'Tinh thể kí ức' },
   ],
 
-  frontAzimuthDeg: 0,
+  // 'auto' = đặt giữa cung nhỏ nhất chứa mặt đọc được của cả 3 biển (tính từ model),
+  // hoặc nhập số độ để cố định.
+  frontAzimuthDeg: 'auto',
   azimuthRangeDeg: 200, // tổng biên độ xoay ngang, chia đều hai phía của mặt trước
+
+  // 'signs' = khung hình ôm cụm biển hiệu; 'model' = ôm toàn bộ model (cả chân cột)
+  frameOn: 'signs',
 
   initialPolarDeg: 72, // 90° = ngang tầm mắt, nhỏ hơn = nhìn từ trên xuống
   polarMinDeg: 30,
@@ -24,10 +30,13 @@ export const HOME_CONFIG = {
   // Giới hạn zoom: bội số của khoảng cách vừa khung hình ban đầu
   zoomMin: 0.55,
   zoomMax: 1.5,
-  fitPadding: 1.08,
+  fitPadding: 1.15,
+
+  // Chạm vào tấm bảng quanh ảnh cũng tính là chọn biển: hệ số nới vùng chạm theo kích thước ảnh
+  hitSlack: 0.8,
 
   focus: {
     duration: 1.6, // giây
-    fill: 0.75, // tỉ lệ biển chiếm khung hình khi focus
+    fill: 0.62, // tỉ lệ ảnh biển chiếm khung hình khi focus (chừa chỗ cho viền bảng)
   },
 };

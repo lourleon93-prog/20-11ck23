@@ -3,6 +3,11 @@ const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 /
 /**
  * Di chuyển mượt camera + điểm nhìn (target của controls) tới tư thế mới.
  * Gọi update(dt) mỗi khung hình. Trả về Promise khi hoàn tất.
+ *
+ * Tuỳ chọn `orbitAxis` ({x, z}): camera đi vòng quanh trục thẳng đứng qua điểm này
+ * (nội suy góc, bán kính, độ cao) thay vì đi thẳng — tránh xuyên qua model ở giữa.
+ * Nếu có `orbitAxis.centerAzimuth` (radian), góc được đo quanh hướng đó để đường đi
+ * nằm trong vùng xoay hợp lệ; nếu không, dùng đường vòng ngắn nhất.
  */
 export class CameraTween {
   constructor(camera, target) {
@@ -15,7 +20,7 @@ export class CameraTween {
     return this._job !== null;
   }
 
-  to({ position, target }, { duration = 1.6, ease = easeInOutCubic } = {}) {
+  to({ position, target }, { duration = 1.6, ease = easeInOutCubic, orbitAxis = null } = {}) {
     this.cancel();
     return new Promise((resolve) => {
       this._job = {
@@ -26,6 +31,7 @@ export class CameraTween {
         t: 0,
         duration,
         ease,
+        orbit: orbitAxis && cylindricalPath(this.camera.position, position, orbitAxis),
         resolve,
       };
     });
@@ -41,7 +47,14 @@ export class CameraTween {
     if (!job) return;
     job.t = Math.min(1, job.t + dt / job.duration);
     const k = job.ease(job.t);
-    this.camera.position.lerpVectors(job.fromPos, job.toPos, k);
+    if (job.orbit) {
+      const { axis, a0, da, r0, r1, y0, y1 } = job.orbit;
+      const a = a0 + da * k;
+      const r = r0 + (r1 - r0) * k;
+      this.camera.position.set(axis.x + Math.sin(a) * r, y0 + (y1 - y0) * k, axis.z + Math.cos(a) * r);
+    } else {
+      this.camera.position.lerpVectors(job.fromPos, job.toPos, k);
+    }
     this.target.lerpVectors(job.fromTarget, job.toTarget, k);
     this.camera.lookAt(this.target);
     if (job.t >= 1) {
@@ -49,4 +62,27 @@ export class CameraTween {
       job.resolve(true);
     }
   }
+}
+
+function cylindricalPath(from, to, axis) {
+  const c = axis.centerAzimuth ?? null;
+  const wrap = (a, ref) => ref + Math.atan2(Math.sin(a - ref), Math.cos(a - ref));
+  let a0 = Math.atan2(from.x - axis.x, from.z - axis.z);
+  let a1 = Math.atan2(to.x - axis.x, to.z - axis.z);
+  if (c !== null) {
+    a0 = wrap(a0, c);
+    a1 = wrap(a1, c);
+  } else {
+    a1 = wrap(a1, a0); // đường vòng ngắn nhất
+  }
+  const da = a1 - a0;
+  return {
+    axis,
+    a0,
+    da,
+    r0: Math.hypot(from.x - axis.x, from.z - axis.z),
+    r1: Math.hypot(to.x - axis.x, to.z - axis.z),
+    y0: from.y,
+    y1: to.y,
+  };
 }

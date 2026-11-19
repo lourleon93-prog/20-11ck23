@@ -56,22 +56,50 @@ export function analyzePlanarObject(object) {
   const ru = range(axisU);
   const rv = range(axisV);
   const rn = range(normal);
+
+  // Nếu mesh có pháp tuyến, dùng nó để xác định mặt TRƯỚC (mặt đọc được của ảnh).
+  // Cần thiết vì vật liệu hai mặt (DoubleSide) nhìn từ phía sau sẽ bị lật gương.
+  const faceNormal = averageWorldNormal(object);
+  const hasFront = faceNormal !== null && Math.abs(faceNormal.dot(normal)) > 0.5;
+  if (hasFront && faceNormal.dot(normal) < 0) normal.negate();
+
   const center = mean
     .clone()
     .addScaledVector(axisU, (ru.min + ru.max) / 2)
     .addScaledVector(axisV, (rv.min + rv.max) / 2)
     .addScaledVector(normal, (rn.min + rn.max) / 2);
 
-  return { center, normal, axisU, axisV, sizeU: ru.max - ru.min, sizeV: rv.max - rv.min };
+  return { center, normal, hasFront, axisU, axisV, sizeU: ru.max - ru.min, sizeV: rv.max - rv.min };
+}
+
+/** Trung bình pháp tuyến các đỉnh trong world space; null nếu mesh không có pháp tuyến. */
+function averageWorldNormal(object) {
+  const sum = new THREE.Vector3();
+  const n = new THREE.Vector3();
+  const normalMatrix = new THREE.Matrix3();
+  let count = 0;
+  object.traverse((child) => {
+    const attr = child.isMesh && child.geometry.attributes.normal;
+    if (!attr) return;
+    normalMatrix.getNormalMatrix(child.matrixWorld);
+    for (let i = 0; i < attr.count; i++) {
+      sum.add(n.fromBufferAttribute(attr, i).applyMatrix3(normalMatrix).normalize());
+      count++;
+    }
+  });
+  if (!count || sum.lengthSq() < 1e-8) return null;
+  return sum.normalize();
 }
 
 /**
  * Tính vị trí camera nhìn vuông góc vào mặt phẳng, sao cho vật thể vừa khung hình.
- * Chọn mặt của biển hướng về phía camera hiện tại.
+ * Nhìn vào mặt trước nếu xác định được; nếu không thì chọn mặt hướng về camera hiện tại.
  */
 export function computeFocusPose(camera, plane, { fill = 0.7 } = {}) {
   const normal = plane.normal.clone();
-  if (normal.dot(new THREE.Vector3().subVectors(camera.position, plane.center)) < 0) normal.negate();
+  if (!plane.hasFront && normal.dot(new THREE.Vector3().subVectors(camera.position, plane.center)) < 0) {
+    normal.negate();
+  }
 
   // Kích thước biển chiếu lên khung hình: chiều ngang ~ thành phần nằm ngang của các trục.
   const up = new THREE.Vector3(0, 1, 0);
