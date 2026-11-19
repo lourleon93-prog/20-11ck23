@@ -72,6 +72,10 @@
   line-height: 1.25;
 }
 
+.panel__title:empty {
+  display: none;
+}
+
 .panel__body {
   margin: 0;
   font-size: var(--text-size);

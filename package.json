@@ -4,8 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host",
-    "build": "vite build",
+    "check-content": "node scripts/check-content.mjs",
+    "dev": "node scripts/check-content.mjs && vite --host",
+    "build": "node scripts/check-content.mjs && vite build",
     "preview": "vite preview --host"
   },
   "dependencies": {
