@@ -12,6 +12,7 @@ const home = new HomeScene({
     console.info(`[CK23] Chọn mục: ${section} (chưa triển khai)`);
     setTimeout(() => home.returnToOverview(), 900);
   },
+  onScrollBack: () => document.getElementById('home-intro').scrollIntoView({ behavior: 'smooth' }),
 });
 
 home.init().catch(() => {});

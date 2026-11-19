@@ -1,10 +1,12 @@
 /**
  * Mũi tên chớp nháy chậm chỉ hướng vuốt. Ẩn vĩnh viễn sau khi gọi dismiss().
+ * direction: 'right' (vuốt trái -> phải) hoặc 'left' (vuốt phải -> trái).
  */
 export class SwipeHint {
-  constructor(container, { label = 'Vuốt để xoay' } = {}) {
+  constructor(container, { label = 'Vuốt để xoay', direction = 'right' } = {}) {
+    this.direction = direction;
     this.el = document.createElement('div');
-    this.el.className = 'swipe-hint';
+    this.el.className = `swipe-hint swipe-hint--${direction}`;
     this.el.setAttribute('aria-hidden', 'true');
     this.el.innerHTML = `
       <svg viewBox="0 0 96 24" fill="none" stroke="currentColor" stroke-width="2"

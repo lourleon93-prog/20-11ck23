@@ -92,6 +92,10 @@
   height: 24px;
 }
 
+.swipe-hint--left svg {
+  transform: scaleX(-1);
+}
+
 .swipe-hint.is-hidden {
   opacity: 0;
   animation: none;

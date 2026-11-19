@@ -12,18 +12,20 @@ import { HOME_CONFIG } from './homeConfig.js';
 const DEG = Math.PI / 180;
 const TAP_MAX_MOVE = 8; // px
 const TAP_MAX_TIME = 450; // ms
-const SWIPE_DISMISS_DX = 40; // px vuốt trái -> phải để ẩn gợi ý
+const SWIPE_DISMISS_DX = 40; // px vuốt theo hướng gợi ý để ẩn mũi tên
 
 /**
  * Trang chủ: cột chỉ đường 3 biển. Xoay ngang giới hạn, góc dọc giới hạn, zoom giới hạn.
  * Chạm vào một biển -> camera bay tới nhìn vuông góc biển -> gọi onSelect(section).
+ * Kéo xuống khi camera đã ở giới hạn góc trên -> gọi onScrollBack() (cuộn về tiêu đề).
  */
 export class HomeScene {
-  constructor({ canvas, stage, loader, onSelect, config = HOME_CONFIG }) {
+  constructor({ canvas, stage, loader, onSelect, onScrollBack, config = HOME_CONFIG }) {
     this.canvas = canvas;
     this.stage = stage;
     this.loaderEl = loader;
     this.onSelect = onSelect;
+    this.onScrollBack = onScrollBack;
     this.config = config;
 
     this.renderer = new Renderer(canvas);
@@ -68,7 +70,7 @@ export class HomeScene {
     this._collectSigns();
     this._frameModel();
     this._bindInput();
-    this.swipeHint = new SwipeHint(this.stage);
+    this.swipeHint = new SwipeHint(this.stage, { direction: this._swipeHintDirection() });
     this.loaderEl.classList.add('is-hidden');
 
     // Chỉ render khi khu vực model đang hiển thị trên màn hình
@@ -132,12 +134,35 @@ export class HomeScene {
     this.orbitAxis = { x: axisCenter.x, z: axisCenter.z, centerAzimuth: front };
 
     const target = sphere.center.clone();
-    const offset = new THREE.Vector3().setFromSphericalCoords(distance, cfg.initialPolarDeg * DEG, front);
+    const startAzimuth = this._initialAzimuth(front, half);
+    const offset = new THREE.Vector3().setFromSphericalCoords(distance, cfg.initialPolarDeg * DEG, startAzimuth);
     this.controls.target.copy(target);
     this.camera.position.copy(target).add(offset);
     this.controls.update();
 
     this.overviewPose = { position: this.camera.position.clone(), target: target.clone() };
+  }
+
+  /**
+   * OrbitControls: vuốt ngón tay sang phải làm azimuth giảm (đã kiểm tra thực nghiệm).
+   * Mũi tên chỉ về phía còn nhiều góc xoay hơn để người dùng không vuốt vào giới hạn.
+   */
+  _swipeHintDirection() {
+    const dir = this.config.swipeHintDirection;
+    if (dir !== 'auto') return dir;
+    const az = this.controls.getAzimuthalAngle();
+    const roomDecrease = az - this.controls.minAzimuthAngle;
+    const roomIncrease = this.controls.maxAzimuthAngle - az;
+    return roomDecrease >= roomIncrease ? 'right' : 'left';
+  }
+
+  /** Azimuth ban đầu: hướng mặt biển của initialSection, kẹp trong vùng xoay. */
+  _initialAzimuth(front, half) {
+    const sign = this.signs.find((s) => s.section === this.config.initialSection);
+    if (!sign) return front;
+    const az = Math.atan2(sign.plane.normal.x, sign.plane.normal.z);
+    const rel = Math.atan2(Math.sin(az - front), Math.cos(az - front)); // lệch so với mặt trước
+    return front + THREE.MathUtils.clamp(rel, -half, half);
   }
 
   /** Hướng (độ) nằm giữa cung nhỏ nhất chứa hướng mặt đọc được của mọi biển. */
@@ -165,19 +190,41 @@ export class HomeScene {
 
   _bindInput() {
     let down = null;
+    const pointers = new Set();
+    // Cuộn lồng nhau: khi đã nghiêng camera tới giới hạn trên mà vẫn kéo xuống -> về tiêu đề
+    let overscroll = 0;
+    let lastY = 0;
     this.canvas.addEventListener('pointerdown', (e) => {
+      pointers.add(e.pointerId);
       if (!e.isPrimary) return;
       down = { x: e.clientX, y: e.clientY, t: performance.now() };
+      overscroll = 0;
+      lastY = e.clientY;
     });
     this.canvas.addEventListener('pointermove', (e) => {
-      if (down && e.isPrimary && !this.swipeHint?.dismissed && e.clientX - down.x > SWIPE_DISMISS_DX) {
-        this.swipeHint.dismiss();
+      const hint = this.swipeHint;
+      if (down && e.isPrimary && hint && !hint.dismissed) {
+        const dx = (e.clientX - down.x) * (hint.direction === 'right' ? 1 : -1);
+        if (dx > SWIPE_DISMISS_DX) hint.dismiss();
+      }
+      if (down && e.isPrimary && pointers.size === 1 && !this.busy) {
+        const dy = e.clientY - lastY;
+        lastY = e.clientY;
+        const atTop = this.controls.getPolarAngle() <= this.controls.minPolarAngle + 0.5 * DEG;
+        overscroll = atTop ? Math.max(0, overscroll + dy) : 0;
+        if (overscroll > this.config.scrollBackPx) {
+          overscroll = -Infinity; // chỉ kích hoạt một lần mỗi lần vuốt
+          this.onScrollBack?.();
+        }
       }
       if (e.pointerType === 'mouse' && !down) {
         this.canvas.style.cursor = this._pickSign(e) ? 'pointer' : '';
       }
     });
+    const release = (e) => pointers.delete(e.pointerId);
+    this.canvas.addEventListener('pointerleave', release);
     this.canvas.addEventListener('pointerup', (e) => {
+      release(e);
       if (!down || !e.isPrimary) return;
       const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
       const quick = performance.now() - down.t < TAP_MAX_TIME;
@@ -186,7 +233,10 @@ export class HomeScene {
       const sign = this._pickSign(e);
       if (sign) this._focusSign(sign);
     });
-    this.canvas.addEventListener('pointercancel', () => (down = null));
+    this.canvas.addEventListener('pointercancel', (e) => {
+      release(e);
+      down = null;
+    });
   }
 
   _pickSign(e) {

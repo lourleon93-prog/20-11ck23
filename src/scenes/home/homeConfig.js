@@ -20,6 +20,14 @@ export const HOME_CONFIG = {
   frontAzimuthDeg: 'auto',
   azimuthRangeDeg: 200, // tổng biên độ xoay ngang, chia đều hai phía của mặt trước
 
+  // Góc nhìn ban đầu: nhìn thẳng vào mặt biển của mục này (vẫn nằm trong vùng xoay).
+  // Đặt null để bắt đầu ở giữa vùng xoay.
+  initialSection: 'history',
+
+  // Hướng mũi tên gợi ý vuốt: 'auto' = chỉ về phía còn nhiều góc xoay hơn tính từ góc ban đầu,
+  // 'right' = vuốt trái -> phải, 'left' = vuốt phải -> trái.
+  swipeHintDirection: 'auto',
+
   // 'signs' = khung hình ôm cụm biển hiệu; 'model' = ôm toàn bộ model (cả chân cột)
   frameOn: 'signs',
 
@@ -34,6 +42,9 @@ export const HOME_CONFIG = {
 
   // Chạm vào tấm bảng quanh ảnh cũng tính là chọn biển: hệ số nới vùng chạm theo kích thước ảnh
   hitSlack: 0.8,
+
+  // Vuốt xuống thêm đoạn này (px) khi camera đã chạm giới hạn góc trên -> cuộn về tiêu đề
+  scrollBackPx: 60,
 
   focus: {
     duration: 1.6, // giây
