@@ -33,11 +33,15 @@ export const SCHOOL_CONFIG = {
     model: 'models/optimized/Thayy.glb',
     flower: 'models/optimized/flower.glb',
     photoMesh: 'FB_IMG_1794075035707', // ảnh người thầy — camera focus vào đây
-    fill: 0.5, // tỉ lệ ảnh chiếm khung hình
-    azimuthRangeDeg: 50, // xoay ngang giới hạn
-    polarRangeDeg: 24, // xoay dọc giới hạn quanh tầm mắt
-    zoomMin: 0.65,
-    zoomMax: 1.3,
+    wallMesh: 'Plane.003', // bức tường treo ảnh: khung hình không được vượt ra ngoài tường này
+    floorMesh: 'Plane', // sàn: phía dưới tường được phép thấy sàn
+    frameMeshes: ['Legs and Rails_0', 'Table Top_0'], // ảnh + bàn là vùng cần thấy khi mới vào
+    fov: 40,
+    fill: 0.88, // tỉ lệ vùng ảnh + bàn chiếm khung hình
+    wallMargin: 0.06, // chừa mép tường (đơn vị model)
+    azimuthRangeDeg: 40, // xoay ngang giới hạn
+    polarRangeDeg: 20, // xoay dọc giới hạn quanh tầm mắt
+    zoomMin: 0.6, // phóng to tối đa (bội số khoảng cách ban đầu); không thu nhỏ hơn ban đầu
     damping: 0.025, // càng nhỏ càng "trễ"
   },
 };
