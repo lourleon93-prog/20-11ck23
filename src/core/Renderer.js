@@ -5,15 +5,22 @@ import * as THREE from 'three';
  * và chỉ chạy vòng lặp render khi được bật (tiết kiệm pin/GPU khi cảnh bị ẩn).
  */
 export class Renderer {
-  constructor(canvas, { maxPixelRatio = 2 } = {}) {
+  /**
+   * motionPixelRatio: độ phân giải khi đang chuyển động (vd. điện thoại vẽ thô hơn lúc camera di chuyển,
+   * mắt không nhận ra; đứng yên 0.25 s thì trở lại độ nét đầy đủ). Mặc định = maxPixelRatio (tắt).
+   */
+  constructor(canvas, { maxPixelRatio = 2, antialias = true, motionPixelRatio = null } = {}) {
     this.canvas = canvas;
     this.webgl = new THREE.WebGLRenderer({
       canvas,
-      antialias: true,
+      antialias,
       alpha: false,
       powerPreference: 'high-performance',
     });
-    this.webgl.setPixelRatio(Math.min(window.devicePixelRatio || 1, maxPixelRatio));
+    this.fullPixelRatio = Math.min(window.devicePixelRatio || 1, maxPixelRatio);
+    this.motionPixelRatio = Math.min(this.fullPixelRatio, motionPixelRatio ?? this.fullPixelRatio);
+    this._still = 0;
+    this.webgl.setPixelRatio(this.fullPixelRatio);
     this.webgl.outputColorSpace = THREE.SRGBColorSpace;
     this.webgl.toneMapping = THREE.ACESFilmicToneMapping;
     this.webgl.toneMappingExposure = 1;
@@ -35,6 +42,14 @@ export class Renderer {
     const size = this.size;
     if (size.width && size.height) fn(size); // canvas chưa hiển thị (0x0) thì chờ ResizeObserver
     return () => this._resizeListeners.delete(fn);
+  }
+
+  /** Báo khung hình hiện tại có chuyển động hay không, để đổi độ phân giải thích ứng. */
+  setMotion(moving, dt) {
+    if (this.motionPixelRatio === this.fullPixelRatio) return;
+    this._still = moving ? 0 : this._still + dt;
+    const want = this._still > 0.25 ? this.fullPixelRatio : this.motionPixelRatio;
+    if (this.webgl.getPixelRatio() !== want) this.webgl.setPixelRatio(want);
   }
 
   /** Đặt hàm được gọi mỗi khung hình: fn(deltaSeconds). */

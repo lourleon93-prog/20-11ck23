@@ -75,42 +75,80 @@ export class SphereHotspot {
 }
 
 /**
- * Chấm điều hướng trên mặt đất tại các waypoint kề bên, chớp nháy chậm, kèm mũi tên chỉ hướng đi.
+ * Điểm điều hướng tại mỗi waypoint, chớp nháy chậm:
+ * - Chấm sáng luôn quay về camera, lơ lửng sát mặt sân, kích thước theo khoảng cách để luôn thấy rõ
+ *   (vòng tròn nằm phẳng trên sân bị ép dẹt khi nhìn xa vì tầm mắt rất thấp).
+ * - Waypoint kề bên (primary): thêm vòng tròn + mũi tên chỉ hướng đi nằm trên mặt sân.
  */
 export class WaypointMarker {
-  constructor({ id, floor, direction, size }) {
+  constructor({ id, floor, direction, size, primary = true }) {
     this.id = id;
+    this.size = size;
+    this.primary = primary;
     this.group = new THREE.Group();
     this.group.position.copy(floor);
 
+    // polygonOffset: vòng tròn nằm sát mặt sân nên đẩy nhẹ về phía camera để không bị mặt sân che
     const mat = (opacity) =>
-      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity, depthWrite: false, toneMapped: false });
-    const ring = new THREE.Mesh(new THREE.RingGeometry(size * 0.75, size, 40), mat(0.9));
-    const dot = new THREE.Mesh(new THREE.CircleGeometry(size * 0.38, 32), mat(0.95));
-    const arrowShape = new THREE.Shape();
-    arrowShape.moveTo(0, size * 1.75);
-    arrowShape.lineTo(size * 0.45, size * 1.25);
-    arrowShape.lineTo(-size * 0.45, size * 1.25);
-    arrowShape.closePath();
-    const arrow = new THREE.Mesh(new THREE.ShapeGeometry(arrowShape), mat(0.9));
+      new THREE.MeshBasicMaterial({
+        color: 0xffffff,
+        transparent: true,
+        opacity,
+        depthWrite: false,
+        toneMapped: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -4,
+        polygonOffsetUnits: -8,
+      });
+    this.materials = [];
+    if (primary) {
+      const ring = new THREE.Mesh(new THREE.RingGeometry(size * 0.75, size, 40), mat(0.9));
+      const arrowShape = new THREE.Shape();
+      arrowShape.moveTo(0, size * 1.75);
+      arrowShape.lineTo(size * 0.45, size * 1.25);
+      arrowShape.lineTo(-size * 0.45, size * 1.25);
+      arrowShape.closePath();
+      const arrow = new THREE.Mesh(new THREE.ShapeGeometry(arrowShape), mat(0.9));
+      const flat = new THREE.Group();
+      flat.rotation.x = -Math.PI / 2;
+      // Mũi tên chỉ theo hướng đi tới waypoint này
+      flat.rotation.z = Math.atan2(-direction.x, -direction.z);
+      flat.add(ring, arrow);
+      this.group.add(flat);
+      this.materials.push(ring.material, arrow.material);
+    }
 
-    const flat = new THREE.Group();
-    flat.rotation.x = -Math.PI / 2;
-    flat.add(ring, dot, arrow);
-    // Mũi tên chỉ theo hướng đi tới waypoint này
-    flat.rotation.z = Math.atan2(-direction.x, -direction.z);
-    this.group.add(flat);
-    this.materials = [ring.material, dot.material, arrow.material];
+    // Chấm sáng quay về camera
+    this.pin = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: getGlowTexture(),
+        color: 0xffffff,
+        transparent: true,
+        opacity: primary ? 1 : 0.9,
+        depthWrite: false,
+        toneMapped: false,
+      }),
+    );
+    this.group.add(this.pin);
+    this.materials.push(this.pin.material);
     this.baseOpacity = this.materials.map((m) => m.opacity);
 
-    this.hit = new THREE.Mesh(new THREE.CircleGeometry(size * 2.2, 16), new THREE.MeshBasicMaterial({ visible: false }));
-    this.hit.rotation.x = -Math.PI / 2;
+    // Vùng chạm: khối cầu quanh chấm sáng (to theo khoảng cách)
+    this.hit = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 8), new THREE.MeshBasicMaterial({ visible: false }));
     this.hit.userData.waypoint = id;
     this.group.add(this.hit);
     this.phase = Math.random() * Math.PI * 2;
   }
 
-  update(t) {
+  /** camPos: vị trí camera — kích thước chấm và vùng chạm giữ gần như cố định trên màn hình. */
+  update(t, camPos) {
+    if (camPos) {
+      const d = this.group.position.distanceTo(camPos);
+      const s = Math.max(this.size * 1.1, d * (this.primary ? 0.045 : 0.032));
+      this.pin.scale.setScalar(s);
+      this.pin.position.y = s * 0.35; // lơ lửng ngay trên mặt sân
+      this.hit.scale.setScalar(Math.max(this.size * 2, d * 0.06));
+    }
     const k = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(t * 2 + this.phase)); // chớp nháy chậm
     this.materials.forEach((m, i) => (m.opacity = this.baseOpacity[i] * k));
   }
@@ -118,7 +156,7 @@ export class WaypointMarker {
   dispose() {
     this.group.traverse((o) => {
       o.geometry?.dispose();
-      o.material?.dispose?.();
+      if (o.material && o.material.map !== glowTexture) o.material.dispose?.();
     });
   }
 }

@@ -28,6 +28,27 @@ export class WaypointGraph {
     return [...(this.nodes.get(id)?.links ?? [])].map((n) => this.nodes.get(n));
   }
 
+  /** Đường đi ngắn nhất (theo số bước) từ `from` tới `to`, gồm cả hai đầu. null nếu không tới được. */
+  path(from, to) {
+    if (from === to) return [from];
+    const prev = new Map([[from, null]]);
+    const queue = [from];
+    while (queue.length) {
+      const id = queue.shift();
+      for (const next of this.nodes.get(id)?.links ?? []) {
+        if (prev.has(next)) continue;
+        prev.set(next, id);
+        if (next === to) {
+          const out = [to];
+          for (let p = id; p !== null; p = prev.get(p)) out.unshift(p);
+          return out;
+        }
+        queue.push(next);
+      }
+    }
+    return null;
+  }
+
   /** Waypoint gần một điểm nhất. */
   nearest(point) {
     let best = null;

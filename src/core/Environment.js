@@ -63,3 +63,12 @@ export function limitTextureSize(root, maxSize) {
   });
   return count;
 }
+
+/** Model tĩnh: tính ma trận một lần rồi tắt cập nhật mỗi khung hình (đỡ tốn CPU với hàng trăm node). */
+export function freezeStatic(root) {
+  root.updateMatrixWorld(true);
+  root.traverse((o) => {
+    o.matrixAutoUpdate = false;
+    o.matrixWorldAutoUpdate = false;
+  });
+}
