@@ -432,7 +432,7 @@
 .guide {
   position: absolute;
   inset: 0;
-  z-index: 40;
+  z-index: 19; /* dưới nút Home (20) để lúc chờ tải vẫn quay về được */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -445,6 +445,45 @@
   cursor: pointer;
   animation: view-in 0.4s ease both;
   transition: opacity 0.4s;
+}
+
+.guide--loading {
+  background: #2b303b;
+  cursor: default;
+}
+
+.guide__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: min(80vw, 340px);
+  color: #fff;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.guide__loading[hidden],
+.guide__dismiss[hidden],
+.guide__bar[hidden] {
+  display: none;
+}
+
+.guide__bar {
+  width: 100%;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+
+.guide__bar i {
+  display: block;
+  height: 100%;
+  background: #ffc66b;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s;
 }
 
 .guide.is-hidden {

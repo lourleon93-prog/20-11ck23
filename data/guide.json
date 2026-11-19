@@ -68,6 +68,8 @@
     "offerHint": {
       "touch": "Chạm vào nút bên dưới để dâng hoa tưởng nhớ thầy",
       "mouse": "Bấm vào nút bên dưới để dâng hoa tưởng nhớ thầy"
-    }
+    },
+    "loading": "Đang tải sân trường, bạn đọc hướng dẫn trong lúc chờ nhé…",
+    "loadError": "Không tải được sân trường. Vui lòng kiểm tra mạng rồi thử lại."
   }
 }

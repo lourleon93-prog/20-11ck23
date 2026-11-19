@@ -127,10 +127,9 @@ export class SchoolSection {
 
   enter() {
     this._ready ??= this._load();
-    // Màn hướng dẫn mỗi lần vào (sau khi sân trường đã tải xong)
-    this._ready.then(() => {
-      if (this.model && this.mode === 'school' && !this.el.hidden) this._showGuide();
-    });
+    // Màn hướng dẫn mỗi lần vào. Nếu sân trường chưa tải xong, màn này chính là màn chờ tải
+    // (hiện tiến độ ở dưới, tải xong mới chạm để đóng được).
+    if (this.mode === 'school') this._showGuide(this.model ? null : this._ready.then(() => !!this.model));
     this.renderer.start();
   }
 
@@ -203,6 +202,7 @@ export class SchoolSection {
   }
 
   _progress(p) {
+    this._guide?.setProgress(p);
     this.loaderBar.style.transform = `scaleX(${p})`;
     this.loaderText.textContent = `Đang tải sân trường… ${Math.round(p * 100)}%`;
   }
@@ -345,19 +345,24 @@ export class SchoolSection {
     this._hint('');
   }
 
-  async _showGuide() {
+  async _showGuide(waitFor = null) {
     this.el.querySelector('.guide')?.remove();
     this.schoolHint.show(false);
-    await showGuideScreen(this.el, {
+    this._guide = showGuideScreen(this.el, {
       title: t('school.title'),
       dismiss: t('dismiss'),
+      waitFor,
+      loadingText: t('school.loading'),
+      errorText: t('school.loadError'),
       cards: [
         { icon: 'waypoint', title: t('school.waypoint.title'), text: t('school.waypoint') },
         { icon: 'sphere', title: t('school.sphere.title'), text: t('school.sphere') },
         { icon: 'rotate', title: t('school.look.title'), text: t('school.look') },
       ],
     });
-    if (this.mode === 'school') this.schoolHint.set([{ icon: 'tap', text: t('school.hint') }]);
+    const ok = await this._guide.closed;
+    this._guide = null;
+    if (ok && this.mode === 'school') this.schoolHint.set([{ icon: 'tap', text: t('school.hint') }]);
   }
 
   /** Ô đếm quả cầu đã xem; đủ hết thì nút Home báo hiệu. */
