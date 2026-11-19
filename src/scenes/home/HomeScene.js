@@ -98,7 +98,10 @@ export class HomeScene {
 
   _collectSigns() {
     for (const def of this.config.signs) {
-      const object = this.model.getObjectByName(def.mesh) ?? findByPrefix(this.model, def.mesh);
+      const object =
+        this.model.getObjectByName(def.mesh) ??
+        this.model.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(def.mesh)) ??
+        findByPrefix(this.model, def.mesh);
       if (!object) {
         console.warn(`[Home] Không tìm thấy mesh biển hiệu "${def.mesh}"`);
         continue;

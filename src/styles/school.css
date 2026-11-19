@@ -1,0 +1,241 @@
+.school {
+  background: #dfe8f1;
+}
+
+.school__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.school__hint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  width: min(88vw, 440px);
+  margin: 0;
+  padding: 10px 14px;
+  transform: translateX(-50%);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+
+.school__hint.is-visible {
+  opacity: 1;
+}
+
+.school__fade {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  background: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.45s ease;
+}
+
+.school__fade.is-on {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.school__loader {
+  position: absolute;
+  inset: 0;
+  z-index: 16;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 0.9rem;
+  transition: opacity 0.5s;
+}
+
+.school__loader.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.school__bar {
+  width: min(60vw, 260px);
+  height: 3px;
+  border-radius: 3px;
+  background: #e6e6ea;
+  overflow: hidden;
+}
+
+.school__bar span {
+  display: block;
+  height: 100%;
+  background: var(--fg);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.2s;
+}
+
+/* Nút thứ hai dưới nút Home (về sân trường) */
+.home-btn--second {
+  top: calc(60px + env(safe-area-inset-top));
+}
+
+.school__offer {
+  position: absolute;
+  left: 50%;
+  bottom: calc(28px + env(safe-area-inset-bottom));
+  z-index: 20;
+  padding: 12px 28px;
+  transform: translateX(-50%);
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.12);
+  color: var(--fg);
+  font: 700 1rem var(--font-body);
+  cursor: pointer;
+}
+
+.school__offer:disabled {
+  opacity: 0.75;
+  cursor: default;
+}
+
+/* ===== Thư viện ảnh ===== */
+.gallery {
+  position: absolute;
+  inset: 0;
+  z-index: 18;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: view-in 0.4s ease both;
+}
+
+.gallery__head {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(64px + env(safe-area-inset-top));
+  padding: env(safe-area-inset-top) 64px 0;
+}
+
+.gallery__title {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.15rem;
+  text-align: center;
+}
+
+.gallery__close,
+.lightbox__close {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  right: calc(12px + env(safe-area-inset-right));
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.gallery__close svg,
+.lightbox__close svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Lưới ảnh căn giữa màn hình */
+.gallery__grid {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 14px calc(20px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+}
+
+.gallery__thumb {
+  width: calc((min(100vw, 560px) - 28px - 20px) / 3);
+  aspect-ratio: 1;
+  padding: 0;
+  border: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #eee;
+  cursor: pointer;
+}
+
+.gallery__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Ảnh phóng to: nền tối, ảnh như một tấm ảnh thật, nội dung phía dưới */
+.lightbox {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  background: rgba(10, 10, 14, 0.88);
+  animation: view-in 0.35s ease both;
+}
+
+.lightbox__media {
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  padding: calc(64px + env(safe-area-inset-top)) 22px 18px;
+  touch-action: pan-y;
+}
+
+.lightbox__img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border: 6px solid #fff;
+  border-radius: 4px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.lightbox__img.is-in {
+  animation: photo-in 0.35s ease both;
+}
+
+@keyframes photo-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--dir, 0) * 30px)) scale(0.97);
+  }
+}
+
+/* Khung nội dung: chiều cao theo nội dung (tỉ lệ không cố định), tối đa dưới 1/2 màn hình */
+.lightbox__panel {
+  min-height: 0;
+  max-height: 46svh;
+  border-radius: 16px 16px 0 0;
+}
