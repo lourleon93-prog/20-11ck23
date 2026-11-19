@@ -1,0 +1,78 @@
+{
+  "intro": "Bạn đang ở trên cỗ máy thời gian, chú ý những phần đóng khung để biết cách điều khiển",
+  "milestones": [
+    {
+      "id": "1953",
+      "title": "1953",
+      "body": "Công đoàn Giáo dục Việt Nam gia nhập Liên hiệp Quốc tế các Công đoàn Giáo dục (FISE).",
+      "media": {
+        "type": "parallax",
+        "layers": [
+          { "src": "images/1953/53-1.png", "motion": 0 },
+          { "src": "images/1953/53-2.png", "motion": -1 }
+        ]
+      }
+    },
+    {
+      "id": "1957",
+      "title": "1957",
+      "body": "FISE lấy ngày 20/11 hàng năm làm Ngày Quốc tế Hiến chương các nhà giáo.",
+      "media": {
+        "type": "parallax",
+        "layers": [
+          { "src": "images/1957/57-1.png", "motion": 0 },
+          { "src": "images/1957/57-2.png", "motion": -1 },
+          { "src": "images/1957/57-3.png", "motion": 1 },
+          { "src": "images/1957/57-4.png", "motion": 0 }
+        ]
+      }
+    },
+    {
+      "id": "1958",
+      "title": "20/11/1958",
+      "body": "Ngày “Quốc tế Hiến chương các nhà giáo” được tổ chức lần đầu tiên trên toàn miền Bắc Việt Nam.",
+      "media": {
+        "type": "model",
+        "model": "models/11958.glb",
+        "view": {
+          "frontAzimuthDeg": 90,
+          "azimuthRangeDeg": 80,
+          "initialPolarDeg": 58,
+          "polarMinDeg": 35,
+          "polarMaxDeg": 80,
+          "zoomMin": 0.6,
+          "zoomMax": 1.3,
+          "fitPadding": 0.8
+        }
+      }
+    },
+    {
+      "id": "1982",
+      "title": "28/9/1982",
+      "body": "Hội đồng Bộ trưởng (Chính phủ) ban hành Quyết định số 167-HĐBT, chính thức lấy ngày 20 tháng 11 làm Ngày Nhà giáo Việt Nam.",
+      "media": {
+        "type": "image",
+        "src": "images/1982/82.jpg",
+        "alt": "Quyết định số 167-HĐBT"
+      }
+    },
+    {
+      "id": "meaning",
+      "title": "Ý nghĩa",
+      "body": "(Nội dung phần Ý nghĩa sẽ được cập nhật.)",
+      "media": {
+        "type": "model",
+        "model": "models/meaning.glb",
+        "view": {
+          "frontAzimuthDeg": 0,
+          "azimuthRangeDeg": 180,
+          "initialPolarDeg": 80,
+          "polarMinDeg": 15,
+          "polarMaxDeg": 165,
+          "zoomMin": 0.6,
+          "zoomMax": 1.3
+        }
+      }
+    }
+  ]
+}
