@@ -1,0 +1,35 @@
+{
+  "hint": "Chạm vào khối tinh thể",
+  "latticeHint": "Chạm vào một bức ảnh để xem · Chụm hai ngón (hoặc cuộn chuột) để thu nhỏ và quay lại",
+  "ending": {
+    "title": "Tinh thể kí ức",
+    "body": "(Nội dung phần kết sẽ được cập nhật.)"
+  },
+  "photos": [
+    {
+      "src": "images/class/2010.jpg",
+      "title": "Kỉ niệm 1",
+      "body": "(Nội dung sẽ được cập nhật.)"
+    },
+    {
+      "src": "images/class/20102.jpg",
+      "title": "Kỉ niệm 2",
+      "body": "(Nội dung sẽ được cập nhật.)"
+    },
+    {
+      "src": "images/class/2011l.jpg",
+      "title": "Kỉ niệm 3",
+      "body": "(Nội dung sẽ được cập nhật.)"
+    },
+    {
+      "src": "images/class/hpbd.jpg",
+      "title": "Kỉ niệm 4",
+      "body": "(Nội dung sẽ được cập nhật.)"
+    },
+    {
+      "src": "images/class/hpbd2.jpg",
+      "title": "Kỉ niệm 5",
+      "body": "(Nội dung sẽ được cập nhật.)"
+    }
+  ]
+}

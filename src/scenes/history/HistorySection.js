@@ -17,7 +17,6 @@ export class HistorySection {
   constructor({ onHome }) {
     this.milestones = data.milestones;
     this.index = 0;
-    this._introShown = false;
     this._raf = 0;
 
     this.el = document.createElement('section');
@@ -54,19 +53,18 @@ export class HistorySection {
     // Tải trước các mô hình của mục này
     for (const s of this.slides) if (s instanceof ModelSlide) loadGLTF(s.model).catch(() => {});
 
-    if (!this._introShown) {
-      this._introShown = true;
-      requestAnimationFrame(() =>
-        showCoachMarks(this.el, {
-          message: data.intro,
-          marks: [
-            { target: this.homeBtn, label: 'Trở về trang chủ', place: 'right' },
-            { target: this.panel.inner, label: 'Vuốt để đổi mốc thời gian', place: 'above' },
-            { target: this.panel.fontEl, label: 'Thay đổi kích cỡ chữ', place: 'above' },
-          ],
-        }),
-      );
-    }
+    // Lớp hướng dẫn hiện mỗi lần vào mục này
+    this.el.querySelector('.coach')?.remove();
+    requestAnimationFrame(() =>
+      showCoachMarks(this.el, {
+        message: data.intro,
+        marks: [
+          { target: this.homeBtn, label: 'Trở về trang chủ', place: 'right' },
+          { target: this.panel.inner, label: 'Vuốt để đổi mốc thời gian', place: 'above' },
+          { target: this.panel.fontEl, label: 'Thay đổi kích cỡ chữ', place: 'above' },
+        ],
+      }),
+    );
   }
 
   leave() {
