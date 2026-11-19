@@ -31,6 +31,10 @@ Trong nội dung muốn có dấu ngoặc kép thì dùng “ ” (ngoặc kép 
 
 Sau khi sửa, trang đang mở bằng `npm run dev` sẽ tự cập nhật.
 
+Nếu file nội dung bị lỗi định dạng, `npm run dev` / `npm run build` (và lượt đăng web trong tab Actions) sẽ dừng
+và báo rõ **file nào, dòng nào, cột nào** bị lỗi. Có thể tự kiểm tra bất cứ lúc nào bằng `npm run check-content`.
+Lỗi hay gặp nhất: dùng dấu ngoặc kép thẳng `"` bên trong nội dung — hãy dùng “ ”.
+
 ### Mục 1 – `data/history.json`
 
 ```json
@@ -112,5 +116,11 @@ model, nên hạn chế build lại liên tục.
 ## 5. Model 3D
 
 - `models/` – bản gốc (không sửa).
-- `models/optimized/` – bản nén của CQT, Thayy, flower dùng trên web: giữ nguyên hình dạng và độ phân giải ảnh
-  (gộp dữ liệu trùng, ảnh WebP, nén hình khối Meshopt). Khi sửa model gốc trong Blender, cần nén lại bản này.
+- `models/optimized/` – bản tối ưu dùng trên web, giữ nguyên ngoại hình:
+  - `CQT.glb` (sân trường), `Thayy.glb` (phòng tưởng nhớ – máy tính), `Thayy.mobile.glb` (phòng tưởng nhớ – điện thoại), `flower.glb`.
+  - Gộp dữ liệu trùng, ảnh WebP (giữ độ phân giải), nén hình khối Meshopt, instancing cho vật lặp lại.
+  - Chỉ giảm tam giác ở mesh cực dày (≥ 100 000 tam giác, vd. hoa trang trí, tán cây) với sai số dưới nửa điểm ảnh
+    tại vị trí camera gần nhất có thể; đường viền hở (chữ, cánh hoa) được khoá nguyên.
+  - Cột cổng bên phải (Mirror modifier chưa apply trong file gốc) được tạo lại bằng phép đối xứng gương của cột trái.
+- Khi sửa model trong Blender (nhớ **apply modifier** trước khi xuất), tạo lại bản tối ưu bằng
+  `scripts/models/optimize.mjs` — cách chạy ghi ở đầu file đó.

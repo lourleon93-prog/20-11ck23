@@ -5,8 +5,9 @@
  * nên quả cầu được vẽ bằng code tại đúng vị trí đó.
  */
 export const SCHOOL_CONFIG = {
-  // Bản nén giữ nguyên hình dạng (bản gốc vẫn ở models/)
-  model: 'models/optimized/CQT.glb',
+  // Bản tối ưu giữ nguyên ngoại hình (bản gốc vẫn ở models/), tạo bằng scripts/models/optimize.mjs.
+  // Bản .mobile (nếu có) có sai số hình học dưới nửa điểm ảnh trên màn hình điện thoại.
+  model: { desktop: 'models/optimized/CQT.glb', mobile: 'models/optimized/CQT.glb' },
   hdri: 'kloofendal_48d_partly_cloudy_puresky_1k.exr',
   exposure: 1,
 
@@ -14,6 +15,7 @@ export const SCHOOL_CONFIG = {
   // Máy tính giữ nguyên độ phân giải gốc. Nếu điện thoại bị tải lại trang/crash, giảm xuống 1024.
   mobileMaxTextureSize: 2048,
   mobileMaxPixelRatio: 1.5,
+  mobileMotionPixelRatio: 1, // độ phân giải lúc đang di chuyển/xoay trên điện thoại (đứng yên thì nét lại)
 
   startWaypoint: 'wp.',
   cameraFov: 65,
@@ -30,7 +32,7 @@ export const SCHOOL_CONFIG = {
   markerSize: 0.03,
 
   memorial: {
-    model: 'models/optimized/Thayy.glb',
+    model: { desktop: 'models/optimized/Thayy.glb', mobile: 'models/optimized/Thayy.mobile.glb' },
     flower: 'models/optimized/flower.glb',
     photoMesh: 'FB_IMG_1794075035707', // ảnh người thầy — camera focus vào đây
     wallMesh: 'Plane.003', // bức tường treo ảnh: khung hình không được vượt ra ngoài tường này

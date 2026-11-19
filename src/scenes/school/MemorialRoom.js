@@ -3,6 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
 import { loadGLTF } from '../../core/AssetLoader.js';
 import { analyzePlanarObject } from '../../camera/CameraFocus.js';
+import { freezeStatic } from '../../core/Environment.js';
 
 const DEG = Math.PI / 180;
 
@@ -24,8 +25,10 @@ function findByName(root, name) {
  * Xoay có độ trễ lớn. Nút "Dâng hoa" thêm bó hoa (flower.glb, đã căn sẵn trùng lọ hoa).
  */
 export class MemorialRoom {
-  constructor({ canvas, config }) {
+  constructor({ canvas, config, mobile = false }) {
     this.config = config;
+    this.mobile = mobile;
+    this._dirty = true;
     this.camera = new THREE.PerspectiveCamera(config.fov ?? 40, 1, 0.01, 100);
     this.scene = new THREE.Scene();
     this.controls = new OrbitControls(this.camera, canvas);
@@ -42,10 +45,11 @@ export class MemorialRoom {
   }
 
   load(onProgress) {
-    this._loaded ??= loadGLTF(this.config.model, onProgress).then((gltf) => {
+    const path = this.mobile ? this.config.model.mobile : this.config.model.desktop;
+    this._loaded ??= loadGLTF(path, onProgress).then((gltf) => {
       const root = gltf.scene;
       this.scene.add(root);
-      root.updateMatrixWorld(true);
+      freezeStatic(root);
       const cfg = this.config;
 
       const photo = findByName(root, cfg.photoMesh);
@@ -113,6 +117,7 @@ export class MemorialRoom {
     c.enabled = true;
     c.update();
     this._lastValid.copy(this.camera.position);
+    this._dirty = true;
   }
 
   leave() {
@@ -122,6 +127,7 @@ export class MemorialRoom {
   setAspect(aspect) {
     this.camera.aspect = aspect;
     this.camera.updateProjectionMatrix();
+    this._dirty = true;
     if (this.controls.enabled) this.enter(); // đổi hướng màn hình: tính lại khung hình
   }
 
@@ -130,11 +136,15 @@ export class MemorialRoom {
     if (this.flowerOffered) return;
     const gltf = await this._flower;
     this.scene.add(gltf.scene);
+    freezeStatic(gltf.scene);
     this.flowerOffered = true;
+    this._dirty = true;
   }
 
+  /** Cập nhật camera; trả về true nếu cần vẽ lại khung hình. */
   update(dt) {
-    if (!this.controls.enabled) return;
+    if (!this.controls.enabled) return false;
+    const before = this.camera.position.clone();
     this.controls.update(dt);
     // Giữ camera trong phạm vi góc tường: nếu khung hình lộ ra ngoài thì trả về vị trí hợp lệ trước đó
     if (this._viewInsideRoom()) this._lastValid.copy(this.camera.position);
@@ -142,6 +152,15 @@ export class MemorialRoom {
       this.camera.position.copy(this._lastValid);
       this.camera.lookAt(this.controls.target);
     }
+    const moved = before.distanceToSquared(this.camera.position) > 1e-12;
+    const dirty = this._dirty || moved;
+    this._dirty = false;
+    return dirty;
+  }
+
+  /** Báo cần vẽ lại (vd. sau khi đổi kích thước màn hình). */
+  invalidate() {
+    this._dirty = true;
   }
 
   // ---------- Hình học ----------

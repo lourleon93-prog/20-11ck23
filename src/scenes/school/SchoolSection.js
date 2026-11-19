@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import waypointsJson from '../../../data/waypoints.json';
 import { Renderer } from '../../core/Renderer.js';
 import { loadGLTF } from '../../core/AssetLoader.js';
-import { loadHDRI, isMobileDevice, limitTextureSize } from '../../core/Environment.js';
+import { loadHDRI, isMobileDevice, limitTextureSize, freezeStatic } from '../../core/Environment.js';
 import { LookControls } from '../../camera/LookControls.js';
 import { createHomeButton } from '../../ui/HomeButton.js';
 import { Gallery } from '../../ui/Gallery.js';
@@ -21,7 +21,11 @@ const SPHERE_DATA = Object.fromEntries(
 );
 
 const TAP_MOVE = 8;
+const WALK_SPEED = 0.55; // đơn vị model / giây khi đi giữa các waypoint
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2);
+const easeIn = (t) => 1 - Math.cos((t * Math.PI) / 2);
+const easeOut = (t) => Math.sin((t * Math.PI) / 2);
+const linear = (t) => t;
 
 const BACK_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>`;
@@ -62,17 +66,24 @@ export class SchoolSection {
     this.gallery = new Gallery({ onClose: () => this._closeSphere() });
     this.el.append(this.gallery.el, this.homeBtn, this.backBtn);
 
-    this.renderer = new Renderer(this.canvas, { maxPixelRatio: this.mobile ? config.mobileMaxPixelRatio : 2 });
+    // Điện thoại: màn hình mật độ cao nên tắt khử răng cưa (không thấy khác biệt, đỡ nặng GPU)
+    const dense = this.mobile && Math.min(window.devicePixelRatio || 1, config.mobileMaxPixelRatio) >= 1.5;
+    this.renderer = new Renderer(this.canvas, {
+      maxPixelRatio: this.mobile ? config.mobileMaxPixelRatio : 2,
+      motionPixelRatio: this.mobile ? config.mobileMotionPixelRatio : null,
+      antialias: !dense,
+    });
+    this._lastView = new THREE.Matrix4();
     this.renderer.webgl.toneMappingExposure = config.exposure;
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(config.cameraFov, 1, 0.005, 60);
+    this.camera = new THREE.PerspectiveCamera(config.cameraFov, 1, 0.015, 60);
     this.look = new LookControls(this.camera, this.canvas, { fovMax: config.cameraFov + 10 });
     this.raycaster = new THREE.Raycaster();
     this.graph = new WaypointGraph(waypointsJson);
     this.hotspots = [];
     this.markers = [];
     this._floorCache = new Map();
-    this.memorial = new MemorialRoom({ canvas: this.canvas, config: config.memorial });
+    this.memorial = new MemorialRoom({ canvas: this.canvas, config: config.memorial, mobile: this.mobile });
     this.mode = 'school'; // 'school' | 'sphere' | 'memorial'
     this._move = null;
     this._time = 0;
@@ -99,6 +110,16 @@ export class SchoolSection {
 
   leave() {
     this.renderer.stop();
+    // Đang đi giữa chừng: dừng tại waypoint gần nhất
+    if (this._walkQueue || (this._move && this.mode === 'school')) {
+      this._walkQueue = null;
+      this._move = null;
+      if (this.model) {
+        this.current = this.graph.nearest(this.camera.position).id;
+        this.camera.position.copy(this.graph.get(this.current).position);
+        this._buildMarkers();
+      }
+    }
     // Lần sau quay lại: đứng ở sân trường, không mở sẵn thư viện/phòng tưởng nhớ
     if (this.gallery.isOpen) this.gallery.el.hidden = true;
     if (this.mode !== 'school' && this._savedPose) {
@@ -122,7 +143,7 @@ export class SchoolSection {
     try {
       const [env, gltf] = await Promise.all([
         loadHDRI(this.renderer.webgl, cfg.hdri),
-        loadGLTF(cfg.model, (p) => this._progress(p)),
+        loadGLTF(this.mobile ? cfg.model.mobile : cfg.model.desktop, (p) => this._progress(p)),
       ]);
       this.env = env;
       this.scene.environment = env.envMap;
@@ -135,7 +156,7 @@ export class SchoolSection {
         if (n) console.info(`[School] Đã thu nhỏ ${n} texture cho điện thoại`);
       }
       this.scene.add(this.model);
-      this.model.updateMatrixWorld(true);
+      freezeStatic(this.model);
       this._createSpheres();
 
       const start = this.graph.get(cfg.startWaypoint) ?? this.graph.get(this.graph.first);
@@ -194,35 +215,94 @@ export class SchoolSection {
     return floor;
   }
 
+  /** Chấm ở mọi waypoint (trừ chỗ đang đứng); waypoint kề bên được làm nổi bật kèm mũi tên. */
   _buildMarkers() {
     for (const m of this.markers) {
       this.scene.remove(m.group);
       m.dispose();
     }
-    this.markers = this.graph.neighbors(this.current).map((n) => {
-      const here = this.graph.get(this.current).position;
-      const dir = new THREE.Vector3().subVectors(n.position, here).setY(0).normalize();
-      const marker = new WaypointMarker({ id: n.id, floor: this._floorBelow(n), direction: dir, size: this.config.markerSize });
-      this.scene.add(marker.group);
-      return marker;
-    });
+    const here = this.graph.get(this.current).position;
+    const near = new Set(this.graph.neighbors(this.current).map((n) => n.id));
+    this.markers = [...this.graph.nodes.values()]
+      .filter((n) => n.id !== this.current)
+      .map((n) => {
+        const dir = new THREE.Vector3().subVectors(n.position, here).setY(0).normalize();
+        const marker = new WaypointMarker({
+          id: n.id,
+          floor: this._floorBelow(n),
+          direction: dir,
+          size: this.config.markerSize,
+          primary: near.has(n.id),
+        });
+        this.scene.add(marker.group);
+        return marker;
+      });
   }
 
-  _moveTo(id) {
+  _showMarkers(visible) {
+    for (const m of this.markers) m.group.visible = visible;
+  }
+
+  /** Đi tới waypoint `id`, lần lượt qua các waypoint ở giữa để ngắm trường. */
+  _moveTo(id, then) {
+    if (this._move) return;
+    const path = this.graph.path(this.current, id);
+    if (!path) return;
+    this._walk(path.slice(1), then);
+  }
+
+  _walk(steps, then) {
+    if (!steps.length) return then?.();
+    this._showMarkers(false);
+    this._walkQueue = { steps: steps.slice(), index: 0, then };
+    this._nextStep();
+  }
+
+  _nextStep() {
+    const q = this._walkQueue;
+    const id = q.steps[q.index];
     const node = this.graph.get(id);
-    if (!node || this._move) return;
     const from = this.camera.position.clone();
-    const dist = from.distanceTo(node.position);
-    this._move = { from, to: node.position.clone(), t: 0, duration: THREE.MathUtils.clamp(dist * 1.3, 0.6, 1.8), id };
+    const single = q.steps.length === 1;
+    const first = q.index === 0;
+    const last = q.index === q.steps.length - 1;
+    const fn = single ? ease : first ? easeIn : last ? easeOut : linear;
+    const duration = Math.max(0.35, from.distanceTo(node.position) / WALK_SPEED) * (single ? 1.3 : first || last ? 1.4 : 1);
+    this._move = { from, to: node.position.clone(), t: 0, duration, ease: fn, id };
+    // Nhìn theo hướng đi
     this.look.lookAt(new THREE.Vector3(node.position.x, this.camera.position.y, node.position.z));
     this.look.targetPitch = 0;
-    for (const m of this.markers) m.group.visible = false;
+  }
+
+  _arrive(id) {
+    this.current = id;
+    const q = this._walkQueue;
+    if (q && q.index < q.steps.length - 1) {
+      q.index++;
+      this._nextStep();
+      return;
+    }
+    this._walkQueue = null;
+    this._buildMarkers();
+    q?.then?.();
   }
 
   // ---------- Quả cầu ----------
 
+  /** Chạm quả cầu: đi theo waypoint tới chỗ gần quả cầu nhất rồi mới focus. */
   _openSphere(hs) {
     if (this.mode !== 'school' || this._move) return;
+    const target = this.graph.nearest(hs.group.position);
+    const path = target && this.graph.path(this.current, target.id);
+    if (path && path.length > 1) {
+      this._hint('');
+      this._walk(path.slice(1), () => this._focusSphere(hs));
+    } else {
+      this._focusSphere(hs);
+    }
+  }
+
+  _focusSphere(hs) {
     this.mode = 'sphere';
     this.look.enabled = false;
     this._savedPose = { position: this.camera.position.clone(), yaw: this.look.targetYaw, pitch: this.look.targetPitch, fov: this.look.targetFov };
@@ -232,7 +312,7 @@ export class SchoolSection {
     this._move = { from: this.camera.position.clone(), to, t: 0, duration: 1.2, then: () => this._afterSphereFocus(hs) };
     this.look.lookAt(center);
     this.look.setFov(this.config.cameraFov);
-    for (const m of this.markers) m.group.visible = false;
+    this._showMarkers(false);
     this._hint('');
   }
 
@@ -359,11 +439,26 @@ export class SchoolSection {
     return new Promise((r) => setTimeout(r, 450));
   }
 
+  /** Camera có đổi vị trí/hướng/góc nhìn so với khung hình trước không. */
+  _cameraMoved(camera) {
+    camera.updateMatrixWorld();
+    const m = camera.matrixWorld;
+    let diff = Math.abs(camera.fov - (this._lastFov ?? camera.fov));
+    for (let i = 0; i < 16; i++) diff += Math.abs(m.elements[i] - this._lastView.elements[i]);
+    this._lastView.copy(m);
+    this._lastFov = camera.fov;
+    return diff > 1e-5;
+  }
+
   _frame(dt) {
     this._time += dt;
     if (this.mode === 'memorial') {
-      this.memorial.update(dt);
-      this.renderer.webgl.render(this.memorial.scene, this.memorial.camera);
+      // Chỉ vẽ lại khi camera thay đổi (đang xoay/trôi do độ trễ) hoặc cảnh vừa đổi
+      const changed = this.memorial.update(dt);
+      const pr = this.renderer.webgl.getPixelRatio();
+      this.renderer.setMotion(this._cameraMoved(this.memorial.camera), dt);
+      if (changed || pr !== this.renderer.webgl.getPixelRatio())
+        this.renderer.webgl.render(this.memorial.scene, this.memorial.camera);
       return;
     }
     if (!this.model) return;
@@ -371,19 +466,17 @@ export class SchoolSection {
     const mv = this._move;
     if (mv) {
       mv.t = Math.min(1, mv.t + dt / mv.duration);
-      this.camera.position.lerpVectors(mv.from, mv.to, ease(mv.t));
+      this.camera.position.lerpVectors(mv.from, mv.to, (mv.ease ?? ease)(mv.t));
       if (mv.t >= 1) {
         this._move = null;
-        if (mv.id) {
-          this.current = mv.id;
-          this._buildMarkers();
-        }
+        if (mv.id) this._arrive(mv.id);
         mv.then?.();
       }
     }
     this.look.update(dt);
+    this.renderer.setMotion(this._cameraMoved(this.camera), dt);
     for (const h of this.hotspots) h.update(this._time);
-    for (const m of this.markers) m.update(this._time);
+    for (const m of this.markers) m.update(this._time, this.camera.position);
     this.renderer.webgl.render(this.scene, this.camera);
   }
 }
