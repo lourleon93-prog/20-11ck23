@@ -92,6 +92,11 @@ Khu vực tưởng nhớ thầy – `data/Mball.003.json`: chữ trên các nút
 
 Mỗi ảnh là một “nguyên tử” trong mạng tinh thể. Thêm ảnh vào `photos` thì mạng tinh thể tự lớn thêm.
 
+### Câu hướng dẫn trên màn hình – `data/guide.json`
+
+Mọi câu hướng dẫn (lớp hướng dẫn, dòng gợi ý, màn “Cách tham quan sân trường”, bong bóng ở nút Home…) nằm ở đây.
+Câu nào có hai bản thì `"touch"` dùng cho điện thoại (chạm, chụm ngón), `"mouse"` dùng cho máy tính (bấm, cuộn chuột).
+
 ## 3. Các thông số có thể chỉnh
 
 | File | Ý nghĩa |

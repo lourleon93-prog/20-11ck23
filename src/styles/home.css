@@ -16,6 +16,17 @@
   line-height: 1.25;
 }
 
+.scroll-text {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(52px + env(safe-area-inset-bottom));
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  animation: hint-blink 2.4s ease-in-out infinite;
+}
+
 .scroll-cue {
   position: absolute;
   bottom: calc(28px + env(safe-area-inset-bottom));
@@ -87,6 +98,16 @@
   transition: opacity 0.5s;
 }
 
+.swipe-hint {
+  width: max-content;
+  max-width: 90vw;
+  padding: 8px 16px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+  color: var(--fg);
+}
+
 .swipe-hint svg {
   width: 96px;
   height: 24px;
@@ -109,4 +130,12 @@
   50% {
     opacity: 1;
   }
+}
+
+/* Gợi ý chạm biển hiệu ở đáy khu vực model */
+.home-taphint {
+  position: absolute;
+  left: 50%;
+  bottom: calc(5% + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
 }

@@ -65,12 +65,15 @@ export class SphereHotspot {
     this.phase = Math.random() * Math.PI * 2;
   }
 
-  update(t) {
+  update(t, camPos) {
     const s = Math.sin(t * 1.6 + this.phase);
     this.group.position.y = this.base.y + s * this.radius * 0.35;
-    this.glow.material.opacity = 0.55 + 0.35 * (0.5 + 0.5 * s);
-    this.glow.scale.setScalar(this.radius * (5.5 + s * 0.8));
-    this.core.material.emissiveIntensity = 1 + 0.5 * (0.5 + 0.5 * s);
+    const v = this.visited ? 0.55 : 1; // quả cầu đã xem sáng dịu đi
+    this.glow.material.opacity = (0.55 + 0.35 * (0.5 + 0.5 * s)) * v;
+    // Quầng sáng thu nhỏ khi camera ở sát để không phủ kín màn hình
+    const near = camPos ? Math.min(1, this.group.position.distanceTo(camPos) / (this.radius * 12)) : 1;
+    this.glow.scale.setScalar(this.radius * (5.5 + s * 0.8) * Math.max(0.35, near));
+    this.core.material.emissiveIntensity = (1 + 0.5 * (0.5 + 0.5 * s)) * v;
   }
 }
 

@@ -1,6 +1,11 @@
 import { assetUrl } from '../core/AssetLoader.js';
 import { ContentPanel } from './ContentPanel.js';
 import { onHorizontalSwipe } from './gestures.js';
+import { ICONS } from './icons.js';
+
+const CHEVRON = (d) =>
+  `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+    stroke-linejoin="round" aria-hidden="true"><path d="${d}"/></svg>`;
 
 const CLOSE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
   stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>`;
@@ -12,7 +17,8 @@ const CLOSE_ICON = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" s
  *   khung nội dung phía dưới (tiêu đề in đậm + nội dung). Vuốt ảnh/nội dung để đổi ảnh.
  */
 export class Gallery {
-  constructor({ onClose }) {
+  /** hints: { grid: 'Chạm vào một ảnh…', photo: 'Vuốt sang trái, phải…' } */
+  constructor({ onClose, hints = {} }) {
     this.onClose = onClose;
     this.photos = [];
     this.index = -1;
@@ -25,9 +31,16 @@ export class Gallery {
         <h2 class="gallery__title"></h2>
         <button type="button" class="gallery__close" aria-label="Đóng">${CLOSE_ICON}</button>
       </div>
+      <p class="gallery__hint">${ICONS.tap}<span></span></p>
       <div class="gallery__grid"></div>
       <div class="lightbox" hidden>
         <div class="lightbox__media"><img class="lightbox__img" alt="" draggable="false" /></div>
+        <div class="lightbox__nav">
+          <button type="button" class="nav-arrow" data-dir="-1" aria-label="Ảnh trước">${CHEVRON('M15 5l-7 7 7 7')}</button>
+          <span class="lightbox__count"></span>
+          <button type="button" class="nav-arrow" data-dir="1" aria-label="Ảnh sau">${CHEVRON('M9 5l7 7-7 7')}</button>
+        </div>
+        <p class="lightbox__hint"></p>
         <button type="button" class="lightbox__close" aria-label="Về danh sách ảnh">${CLOSE_ICON}</button>
       </div>`;
     this.titleEl = this.el.querySelector('.gallery__title');
@@ -38,10 +51,17 @@ export class Gallery {
     this.panel.el.classList.add('lightbox__panel');
     this.lightbox.appendChild(this.panel.el);
 
+    this.el.querySelector('.gallery__hint span').textContent = hints.grid || '';
+    this.el.querySelector('.gallery__hint').hidden = !hints.grid;
+    this.el.querySelector('.lightbox__hint').textContent = hints.photo || '';
+    this.el.querySelector('.lightbox__nav').addEventListener('click', (e) => {
+      const btn = e.target.closest('.nav-arrow');
+      if (btn) this._showPhoto(this.index + Number(btn.dataset.dir), Number(btn.dataset.dir));
+    });
     this.el.querySelector('.gallery__close').addEventListener('click', () => this.close());
     this.el.querySelector('.lightbox__close').addEventListener('click', () => this._closePhoto());
     onHorizontalSwipe(this.lightbox, (dir) => this._showPhoto(this.index + dir, dir), {
-      ignore: '.panel__font, .lightbox__close',
+      ignore: '.panel__font, .lightbox__close, .lightbox__nav',
     });
   }
 
@@ -90,6 +110,9 @@ export class Gallery {
     void this.img.offsetWidth;
     this.img.classList.add('is-in');
     this.panel.set({ title: p.title, body: p.body }, dir);
+    this.el.querySelector('.lightbox__count').textContent = `${i + 1} / ${this.photos.length}`;
+    this.el.querySelector('.lightbox__nav [data-dir="-1"]').disabled = i === 0;
+    this.el.querySelector('.lightbox__nav [data-dir="1"]').disabled = i === this.photos.length - 1;
   }
 
   _closePhoto() {

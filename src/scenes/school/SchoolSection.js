@@ -5,7 +5,11 @@ import { Renderer } from '../../core/Renderer.js';
 import { loadGLTF } from '../../core/AssetLoader.js';
 import { loadHDRI, isMobileDevice, limitTextureSize, freezeStatic } from '../../core/Environment.js';
 import { LookControls } from '../../camera/LookControls.js';
-import { createHomeButton } from '../../ui/HomeButton.js';
+import { createHomeButton, setHomeAttention } from '../../ui/HomeButton.js';
+import { HintBar } from '../../ui/HintBar.js';
+import { showGuideScreen } from '../../ui/GuideScreen.js';
+import { ICONS } from '../../ui/icons.js';
+import { t } from '../../ui/guide.js';
 import { Gallery } from '../../ui/Gallery.js';
 import { WaypointGraph } from './WaypointGraph.js';
 import { SphereHotspot, WaypointMarker } from './Hotspots.js';
@@ -49,6 +53,7 @@ export class SchoolSection {
       <div class="school__fade"></div>
       <div class="school__loader"><div class="school__loader-text">Đang tải sân trường…</div>
         <div class="school__bar"><span></span></div></div>
+      <div class="school__progress" hidden>${ICONS.sphere}<span class="school__progress-text"></span></div>
       <button type="button" class="school__offer" hidden></button>`;
     this.canvas = this.el.querySelector('.school__canvas');
     this.hintEl = this.el.querySelector('.school__hint');
@@ -57,13 +62,30 @@ export class SchoolSection {
     this.loaderText = this.el.querySelector('.school__loader-text');
     this.loaderBar = this.el.querySelector('.school__bar span');
     this.offerBtn = this.el.querySelector('.school__offer');
+    this.progressEl = this.el.querySelector('.school__progress');
+    this.visited = new Set();
+    // Gợi ý nền ở đáy màn hình (sân trường) và trong phòng tưởng nhớ
+    this.schoolHint = new HintBar([{ icon: 'tap', text: t('school.hint') }], { className: 'school__hintbar' });
+    this.roomHint = new HintBar(
+      [
+        { icon: 'rotate', text: t('school.memorialHint') },
+        { icon: 'tap', text: t('school.offerHint') },
+      ],
+      { className: 'school__hintbar school__hintbar--room' },
+    );
+    this.schoolHint.show(false);
+    this.roomHint.show(false);
+    this.el.append(this.schoolHint.el, this.roomHint.el);
 
     this.homeBtn = createHomeButton(onHome);
     this.backBtn = createHomeButton(() => this._leaveMemorial());
-    this.backBtn.classList.add('home-btn--second');
-    this.backBtn.innerHTML = BACK_ICON;
+    this.backBtn.classList.add('home-btn--second', 'home-btn--labeled');
+    this.backBtn.innerHTML = `${BACK_ICON}<span>${t('school.backButton')}</span>`;
     this.backBtn.hidden = true;
-    this.gallery = new Gallery({ onClose: () => this._closeSphere() });
+    this.gallery = new Gallery({
+      onClose: () => this._closeSphere(),
+      hints: { grid: t('school.galleryHint'), photo: t('school.photoHint') },
+    });
     this.el.append(this.gallery.el, this.homeBtn, this.backBtn);
 
     // Điện thoại: màn hình mật độ cao nên tắt khử răng cưa (không thấy khác biệt, đỡ nặng GPU)
@@ -105,6 +127,10 @@ export class SchoolSection {
 
   enter() {
     this._ready ??= this._load();
+    // Màn hướng dẫn mỗi lần vào (sau khi sân trường đã tải xong)
+    this._ready.then(() => {
+      if (this.model && this.mode === 'school' && !this.el.hidden) this._showGuide();
+    });
     this.renderer.start();
   }
 
@@ -125,6 +151,8 @@ export class SchoolSection {
     if (this.mode !== 'school' && this._savedPose) {
       this.memorial.leave();
       this.backBtn.hidden = this.offerBtn.hidden = true;
+      this.roomHint.show(false);
+      this.schoolHint.show(true);
       this.fadeEl.classList.remove('is-on');
       this._move = null;
       this.camera.position.copy(this._savedPose.position);
@@ -167,7 +195,7 @@ export class SchoolSection {
       this._buildMarkers();
 
       this.loaderEl.classList.add('is-hidden');
-      this._hint('Chạm chấm sáng để di chuyển · Kéo để nhìn xung quanh · Chạm quả cầu phát sáng để xem kỉ niệm', 6000);
+      this._updateProgress();
     } catch (err) {
       console.error(err);
       this.loaderText.textContent = 'Không tải được sân trường. Vui lòng thử lại sau.';
@@ -252,6 +280,7 @@ export class SchoolSection {
   }
 
   _walk(steps, then) {
+    this.schoolHint.fade();
     if (!steps.length) return then?.();
     this._showMarkers(false);
     this._walkQueue = { steps: steps.slice(), index: 0, then };
@@ -316,16 +345,61 @@ export class SchoolSection {
     this._hint('');
   }
 
+  async _showGuide() {
+    this.el.querySelector('.guide')?.remove();
+    this.schoolHint.show(false);
+    await showGuideScreen(this.el, {
+      title: t('school.title'),
+      dismiss: t('dismiss'),
+      cards: [
+        { icon: 'waypoint', title: t('school.waypoint.title'), text: t('school.waypoint') },
+        { icon: 'sphere', title: t('school.sphere.title'), text: t('school.sphere') },
+        { icon: 'rotate', title: t('school.look.title'), text: t('school.look') },
+      ],
+    });
+    if (this.mode === 'school') this.schoolHint.set([{ icon: 'tap', text: t('school.hint') }]);
+  }
+
+  /** Ô đếm quả cầu đã xem; đủ hết thì nút Home báo hiệu. */
+  _updateProgress() {
+    const total = this.hotspots.length;
+    this.progressEl.querySelector('.school__progress-text').textContent = `${t('school.progress')}: ${this.visited.size}/${total}`;
+    this.progressEl.hidden = this.mode === 'memorial' || !total;
+    this.progressEl.classList.toggle('is-done', total > 0 && this.visited.size >= total);
+    setHomeAttention(this.homeBtn, total > 0 && this.visited.size >= total ? t('school.done') : '');
+  }
+
   _afterSphereFocus(hs) {
+    this.visited.add(hs.id);
+    hs.visited = true;
+    this.schoolHint.fade();
+    this._updateProgress();
     const data = SPHERE_DATA[hs.def.data] ?? {};
     if (hs.def.type === 'memorial') return this._enterMemorial();
     this.gallery.open({ title: data.title || '', photos: data.photos || [] });
   }
 
+  /**
+   * Sau khi xem quả cầu: quay mặt về phía waypoint bên cạnh (quả cầu đặt rất sát waypoint,
+   * nếu vẫn nhìn vào nó thì cả màn hình chỉ thấy quầng sáng).
+   */
+  _faceNeighbor(from) {
+    const next = this.graph.neighbors(this.current)[0];
+    if (!next) return false;
+    const saved = this.camera.position.clone();
+    this.camera.position.copy(from);
+    this.look.lookAt(new THREE.Vector3(next.position.x, from.y, next.position.z));
+    this.look.targetPitch = 0;
+    this.camera.position.copy(saved);
+    return true;
+  }
+
   _closeSphere() {
     const pose = this._savedPose;
-    this.look.targetYaw = pose.yaw;
-    this.look.targetPitch = pose.pitch;
+    if (!this._faceNeighbor(pose.position)) {
+      this.look.targetYaw = pose.yaw;
+      this.look.targetPitch = pose.pitch;
+    }
     this.look.setFov(pose.fov);
     this._move = {
       from: this.camera.position.clone(),
@@ -359,6 +433,12 @@ export class SchoolSection {
     this.memorial.enter();
     this.backBtn.hidden = false;
     this.offerBtn.hidden = false;
+    this.offerBtn.classList.toggle('is-pulsing', !this.memorial.flowerOffered);
+    this.schoolHint.show(false);
+    this.roomHint.show(true);
+    this._updateProgress();
+    // Người dùng đã thử xoay trong phòng -> gợi ý mờ đi
+    this.canvas.addEventListener('pointerdown', () => this.mode === 'memorial' && this.roomHint.fade(), { once: true });
     this.offerBtn.disabled = this.memorial.flowerOffered;
     await this._fade(false);
   }
@@ -368,14 +448,21 @@ export class SchoolSection {
     this.memorial.leave();
     this.backBtn.hidden = true;
     this.offerBtn.hidden = true;
+    this.roomHint.show(false);
+    this.schoolHint.show(true);
     this.loaderEl.classList.add('is-hidden');
     // Về lại đúng chỗ đứng trước khi vào quả cầu
     const pose = this._savedPose;
     this.camera.position.copy(pose.position);
     this.look.targetYaw = this.look.yaw = pose.yaw;
     this.look.targetPitch = this.look.pitch = pose.pitch;
+    if (this._faceNeighbor(pose.position)) {
+      this.look.yaw = this.look.targetYaw;
+      this.look.pitch = this.look.targetPitch;
+    }
     this.look.setFov(pose.fov);
     this.mode = 'school';
+    this._updateProgress();
     this.look.enabled = true;
     for (const m of this.markers) m.group.visible = true;
     await this._fade(false);
@@ -389,6 +476,9 @@ export class SchoolSection {
     try {
       await this.memorial.offerFlower();
       this.offerBtn.textContent = memData.offeredButton || 'Đã dâng hoa';
+      this.offerBtn.classList.remove('is-pulsing');
+      this.roomHint.set([{ icon: 'rotate', text: t('school.memorialHint') }]);
+      this.roomHint.fade();
     } catch (err) {
       console.error(err);
       this.offerBtn.textContent = label;
@@ -475,7 +565,7 @@ export class SchoolSection {
     }
     this.look.update(dt);
     this.renderer.setMotion(this._cameraMoved(this.camera), dt);
-    for (const h of this.hotspots) h.update(this._time);
+    for (const h of this.hotspots) h.update(this._time, this.camera.position);
     for (const m of this.markers) m.update(this._time, this.camera.position);
     this.renderer.webgl.render(this.scene, this.camera);
   }

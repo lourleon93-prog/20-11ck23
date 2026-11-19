@@ -168,13 +168,43 @@
 
 .coach__label {
   position: absolute;
-  padding: 4px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  max-width: min(86vw, 360px);
+  padding: 5px 12px;
   border-radius: 999px;
   background: var(--fg);
   color: #fff;
-  font-size: 0.8rem;
-  white-space: nowrap;
+  font-size: 0.82rem;
+  line-height: 1.3;
+  white-space: normal;
+  width: max-content;
   pointer-events: none;
+}
+
+.coach__label .gicon {
+  flex: none;
+  width: 22px;
+  height: 22px;
+}
+
+.coach__dismiss {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  font-weight: 700;
+  animation: hint-blink 2.4s ease-in-out infinite;
+}
+
+.coach__dismiss[hidden] {
+  display: none;
+}
+
+.coach__message p {
+  margin: 0;
 }
 
 .coach__label--below {
@@ -220,4 +250,343 @@
   color: var(--muted);
   font-size: 0.9rem;
   background: var(--bg);
+}
+
+/* ===== Biểu tượng hướng dẫn ===== */
+.gicon {
+  display: inline-block;
+  flex: none;
+  width: 28px;
+  height: 28px;
+}
+
+.gicon--tap .gicon__tap {
+  animation: g-tap 1.6s ease-in-out infinite;
+  transform-origin: 24px 30px;
+}
+
+.gicon--tap .gicon__ripple {
+  animation: g-ripple 1.6s ease-out infinite;
+  transform-origin: 23px 10px;
+}
+
+.gicon--swipe .gicon__slide {
+  animation: g-slide 2s ease-in-out infinite;
+}
+
+.gicon--pinch .gicon__pinch circle:first-child {
+  animation: g-pinch-l 1.8s ease-in-out infinite;
+}
+
+.gicon--pinch .gicon__pinch circle:last-child {
+  animation: g-pinch-r 1.8s ease-in-out infinite;
+}
+
+.gicon--tilt .gicon__tilt {
+  animation: g-tilt 2.4s ease-in-out infinite;
+  transform-origin: 24px 36px;
+}
+
+.gicon--mouse .gicon__wheel {
+  animation: g-wheel 1.4s ease-in-out infinite;
+}
+
+@keyframes g-tap {
+  50% {
+    transform: translateY(3px) scale(0.95);
+  }
+}
+
+@keyframes g-ripple {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  40% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
+@keyframes g-slide {
+  0%,
+  100% {
+    transform: translate(-7px, 3px);
+  }
+  50% {
+    transform: translate(7px, 3px);
+  }
+}
+
+@keyframes g-pinch-l {
+  50% {
+    transform: translateX(-5px);
+  }
+}
+
+@keyframes g-pinch-r {
+  50% {
+    transform: translateX(5px);
+  }
+}
+
+@keyframes g-tilt {
+  0%,
+  100% {
+    transform: rotate(-16deg);
+  }
+  50% {
+    transform: rotate(16deg);
+  }
+}
+
+@keyframes g-wheel {
+  50% {
+    transform: translateY(4px);
+    opacity: 0.4;
+  }
+}
+
+/* Chấm sáng waypoint & quả cầu (minh hoạ) */
+.gicon--waypoint,
+.gicon--sphere {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+}
+
+.gicon--waypoint i,
+.gicon--sphere i {
+  display: block;
+  border-radius: 50%;
+  animation: hint-blink 2.4s ease-in-out infinite;
+}
+
+.gicon--waypoint i {
+  width: 18px;
+  height: 18px;
+  background: radial-gradient(circle, #fff 0 35%, rgba(255, 255, 255, 0.4) 60%, transparent 72%);
+  box-shadow:
+    0 0 0 3px rgba(120, 120, 140, 0.55),
+    0 0 14px 4px rgba(255, 255, 255, 0.9);
+}
+
+.gicon--sphere i {
+  width: 26px;
+  height: 26px;
+  background: radial-gradient(circle at 35% 35%, #fff6dc, #ffc66b 55%, #e09a2c);
+  box-shadow: 0 0 18px 6px rgba(255, 198, 107, 0.75);
+}
+
+/* ===== Dòng gợi ý ===== */
+.hintbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: max-content;
+  max-width: min(92vw, 440px);
+  padding: 8px 14px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+  color: var(--fg);
+  font-size: 0.85rem;
+  line-height: 1.35;
+  pointer-events: none;
+  transition: opacity 0.6s;
+  animation: hintbar-pulse 3s ease-in-out infinite;
+}
+
+.hintbar[hidden] {
+  display: none;
+}
+
+.hintbar.is-faded {
+  opacity: 0.45;
+  animation: none;
+}
+
+.hintbar__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+@keyframes hintbar-pulse {
+  0%,
+  100% {
+    opacity: 0.75;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ===== Màn hướng dẫn ===== */
+.guide {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: calc(20px + env(safe-area-inset-top)) 18px calc(20px + env(safe-area-inset-bottom));
+  background: rgba(20, 22, 30, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  cursor: pointer;
+  animation: view-in 0.4s ease both;
+  transition: opacity 0.4s;
+}
+
+.guide.is-hidden {
+  opacity: 0;
+}
+
+.guide__box {
+  width: min(92vw, 440px);
+  padding: 18px 18px 8px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.guide__title {
+  margin: 0 0 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.guide__card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  border-top: 1px solid #eee;
+}
+
+.guide__pic {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: #3c4250;
+  color: #fff;
+}
+
+.guide__pic .gicon:not(.gicon--waypoint):not(.gicon--sphere) {
+  width: 34px;
+  height: 34px;
+}
+
+.guide__card h3 {
+  margin: 0 0 2px;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.guide__card p {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: #444;
+}
+
+.guide__dismiss {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  animation: hint-blink 2.4s ease-in-out infinite;
+}
+
+/* ===== Nút Home báo hiệu đã xem xong ===== */
+.home-btn.is-attention {
+  background: #fff;
+  box-shadow: 0 0 0 0 rgba(255, 170, 40, 0.7);
+  animation: home-pulse 1.6s ease-out infinite;
+}
+
+@keyframes home-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 170, 40, 0.75);
+  }
+  100% {
+    box-shadow: 0 0 0 16px rgba(255, 170, 40, 0);
+  }
+}
+
+.home-bubble {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  left: calc(62px + env(safe-area-inset-left));
+  z-index: 21;
+  max-width: min(68vw, 300px);
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: #fff3dc;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+  color: var(--fg);
+  font: 700 0.85rem/1.35 var(--font-body);
+  text-align: left;
+  cursor: pointer;
+  animation: bubble-in 0.5s ease both;
+}
+
+.home-bubble::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: -6px;
+  border: 6px solid transparent;
+  border-left: 0;
+  border-right-color: #fff3dc;
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+/* Nút mũi tên trước / sau */
+.nav-arrow {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: #f1f1f4;
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.nav-arrow svg {
+  width: 22px;
+  height: 22px;
+}
+
+.nav-arrow:disabled {
+  opacity: 0.25;
+  cursor: default;
 }
