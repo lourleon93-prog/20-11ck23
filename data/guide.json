@@ -1,0 +1,75 @@
+{
+  "dismiss": {
+    "touch": "Chạm vào màn hình khi bạn đã hiểu",
+    "mouse": "Bấm chuột vào màn hình khi bạn đã hiểu"
+  },
+  "home": {
+    "scrollUp": "Vuốt lên để bắt đầu",
+    "rotate": "Vuốt ngang để xoay cột biển",
+    "tapSign": {
+      "touch": "Chạm vào một tấm biển để vào mục đó",
+      "mouse": "Bấm vào một tấm biển để vào mục đó"
+    }
+  },
+  "history": {
+    "homeButton": "Trở về trang chủ",
+    "swipe": "Vuốt sang trái hoặc phải để đổi mốc thời gian",
+    "fontSize": "Kéo để phóng to / thu nhỏ chữ",
+    "tilt": {
+      "touch": "Nghiêng điện thoại sang trái, sang phải để thấy hình chuyển động",
+      "mouse": "Di chuột để thấy hình chuyển động"
+    },
+    "rotate": {
+      "touch": "Kéo để xoay",
+      "mouse": "Kéo chuột để xoay"
+    },
+    "zoom": {
+      "touch": "Chụm hai ngón để phóng to, thu nhỏ",
+      "mouse": "Cuộn chuột để phóng to, thu nhỏ"
+    },
+    "done": "Bạn đã xem hết mục này! Bấm vào đây để về trang chủ"
+  },
+  "school": {
+    "title": "Cách tham quan sân trường",
+    "waypoint": {
+      "title": "Chấm sáng trên sân",
+      "touch": "Chạm vào chấm sáng để đi tới đó. Đi lần lượt từng chấm để ngắm trường.",
+      "mouse": "Bấm vào chấm sáng để đi tới đó. Đi lần lượt từng chấm để ngắm trường."
+    },
+    "sphere": {
+      "title": "Quả cầu kỉ niệm (có 4 quả)",
+      "touch": "Chạm vào quả cầu để xem ảnh. Ở xa cũng được, bạn sẽ được tự đưa tới.",
+      "mouse": "Bấm vào quả cầu để xem ảnh. Ở xa cũng được, bạn sẽ được tự đưa tới."
+    },
+    "look": {
+      "title": "Nhìn xung quanh",
+      "touch": "Kéo ngón tay trên màn hình để nhìn xung quanh. Chụm hai ngón để phóng to.",
+      "mouse": "Kéo chuột để nhìn xung quanh. Cuộn chuột để phóng to."
+    },
+    "progress": "Quả cầu đã xem",
+    "galleryHint": {
+      "touch": "Chạm vào một ảnh để xem lớn",
+      "mouse": "Bấm vào một ảnh để xem lớn"
+    },
+    "photoHint": {
+      "touch": "Vuốt sang trái, phải hoặc bấm mũi tên để xem ảnh khác",
+      "mouse": "Bấm mũi tên để xem ảnh khác"
+    },
+    "memorialHint": {
+      "touch": "Kéo nhẹ để nhìn quanh · Chụm hai ngón để phóng to",
+      "mouse": "Kéo chuột để nhìn quanh · Cuộn chuột để phóng to"
+    },
+    "done": "Bạn đã xem hết 4 quả cầu! Bấm vào đây để về trang chủ",
+    "hint": {
+      "touch": "Chạm chấm sáng để đi · Chạm quả cầu để xem ảnh",
+      "mouse": "Bấm chấm sáng để đi · Bấm quả cầu để xem ảnh"
+    },
+    "backButton": "Về sân trường",
+    "offerHint": {
+      "touch": "Chạm vào nút bên dưới để dâng hoa tưởng nhớ thầy",
+      "mouse": "Bấm vào nút bên dưới để dâng hoa tưởng nhớ thầy"
+    },
+    "loading": "Đang tải sân trường, bạn đọc hướng dẫn trong lúc chờ nhé…",
+    "loadError": "Không tải được sân trường. Vui lòng kiểm tra mạng rồi thử lại."
+  }
+}

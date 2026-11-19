@@ -78,3 +78,41 @@
   -webkit-user-select: none;
   pointer-events: none;
 }
+
+/* Gợi ý thao tác ở đáy vùng hình */
+.media-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  z-index: 3;
+  transform: translateX(-50%);
+}
+
+/* Hàng điều hướng trong khung nội dung */
+.history__nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -6px 0 6px;
+}
+
+.history__dots {
+  display: flex;
+  gap: 7px;
+}
+
+.history__dots i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #d5d5da;
+  transition:
+    background 0.3s,
+    transform 0.3s;
+}
+
+.history__dots i.is-on {
+  background: var(--fg);
+  transform: scale(1.25);
+}

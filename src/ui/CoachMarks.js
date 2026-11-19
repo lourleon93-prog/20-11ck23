@@ -1,23 +1,29 @@
+import { ICONS } from './icons.js';
+
 /**
  * Lớp hướng dẫn: khung chớp nháy chậm quanh các phần điều khiển kèm ý nghĩa,
- * cùng một thông điệp chung. Biến mất khi người dùng chạm vào màn hình.
+ * cùng một thông điệp chung và câu "chạm vào màn hình khi đã hiểu". Biến mất khi người dùng chạm.
  *
  * @param {HTMLElement} container
- * @param {{ message: string, marks: { target: HTMLElement, label: string, place?: 'below'|'above'|'right' }[] }} opts
+ * @param {{ message: string, dismiss?: string,
+ *           marks: { target: HTMLElement, label: string, icon?: string, place?: 'below'|'above'|'right' }[] }} opts
  * @returns {Promise<void>} khi người dùng chạm để đóng
  */
-export function showCoachMarks(container, { message, marks }) {
+export function showCoachMarks(container, { message, dismiss = '', marks }) {
   const overlay = document.createElement('div');
   overlay.className = 'coach';
-  overlay.innerHTML = `<p class="coach__message"></p>`;
-  overlay.querySelector('.coach__message').textContent = message;
+  overlay.innerHTML = `<div class="coach__message"><p></p><p class="coach__dismiss">${ICONS.tap}<span></span></p></div>`;
+  overlay.querySelector('.coach__message p').textContent = message;
+  overlay.querySelector('.coach__dismiss span').textContent = dismiss;
+  overlay.querySelector('.coach__dismiss').hidden = !dismiss;
 
   const items = marks.map((m) => {
     const frame = document.createElement('div');
     frame.className = 'coach__frame';
     const label = document.createElement('div');
     label.className = `coach__label coach__label--${m.place || 'below'}`;
-    label.textContent = m.label;
+    if (m.icon && ICONS[m.icon]) label.innerHTML = ICONS[m.icon];
+    label.appendChild(document.createTextNode(m.label));
     overlay.append(frame, label);
     return { ...m, frame, label };
   });

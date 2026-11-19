@@ -6,12 +6,14 @@ import './styles/crystal.css';
 import './styles/school.css';
 
 import { Router } from './core/Router.js';
+import { t } from './ui/guide.js';
 import { HomeScene } from './scenes/home/HomeScene.js';
 import { HistorySection } from './scenes/history/HistorySection.js';
 import { CrystalSection } from './scenes/crystal/CrystalSection.js';
 import { SchoolSection } from './scenes/school/SchoolSection.js';
 
 const app = document.getElementById('app');
+document.getElementById('scroll-text').textContent = t('home.scrollUp');
 const goHome = () => router.go('home');
 
 const home = new HomeScene({

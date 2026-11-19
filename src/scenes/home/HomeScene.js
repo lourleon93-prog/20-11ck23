@@ -7,6 +7,8 @@ import { loadGLTF } from '../../core/AssetLoader.js';
 import { analyzePlanarObject, computeFocusPose } from '../../camera/CameraFocus.js';
 import { CameraTween } from '../../camera/CameraTween.js';
 import { SwipeHint } from '../../ui/SwipeHint.js';
+import { HintBar } from '../../ui/HintBar.js';
+import { t } from '../../ui/guide.js';
 import { HOME_CONFIG } from './homeConfig.js';
 
 const DEG = Math.PI / 180;
@@ -70,7 +72,10 @@ export class HomeScene {
     this._collectSigns();
     this._frameModel();
     this._bindInput();
-    this.swipeHint = new SwipeHint(this.stage, { direction: this._swipeHintDirection() });
+    this.swipeHint = new SwipeHint(this.stage, { direction: this._swipeHintDirection(), label: t('home.rotate') });
+    // Gợi ý chạm biển: luôn hiện (mờ đi sau khi người dùng đã chọn một mục)
+    this.tapHint = new HintBar([{ icon: 'tap', text: t('home.tapSign') }], { className: 'home-taphint' });
+    this.stage.appendChild(this.tapHint.el);
     this.loaderEl.classList.add('is-hidden');
 
     // Chỉ render khi khu vực model đang hiển thị trên màn hình
@@ -106,7 +111,7 @@ export class HomeScene {
         console.warn(`[Home] Không tìm thấy mesh biển hiệu "${def.mesh}"`);
         continue;
       }
-      this.signs.push({ ...def, object, plane: analyzePlanarObject(object) });
+      this.signs.push({ ...def, object, plane: analyzePlanarObject(object), glow: makeGlowable(object) });
     }
   }
 
@@ -269,6 +274,7 @@ export class HomeScene {
     this.busy = true;
     this.controls.enabled = false;
     this.swipeHint?.dismiss();
+    this.tapHint?.fade();
     this.overviewPose = { position: this.camera.position.clone(), target: this.controls.target.clone() };
     const pose = computeFocusPose(this.camera, sign.plane, { fill: this.config.focus.fill });
     await this.tween.to(pose, { duration: this.config.focus.duration, orbitAxis: this.orbitAxis });
@@ -276,6 +282,12 @@ export class HomeScene {
   }
 
   _frame(dt) {
+    this._time = (this._time ?? 0) + dt;
+    // Biển hiệu sáng lên chậm theo nhịp để người xem biết là bấm được (lệch pha giữa các biển)
+    this.signs.forEach((s, i) => {
+      const k = this.busy ? 0 : 0.5 - 0.5 * Math.cos(this._time * 2.2 - i * 0.9);
+      for (const m of s.glow) m.set(k);
+    });
     if (this.tween.active) this.tween.update(dt);
     else if (this.controls.enabled) this.controls.update(dt);
     this.renderer.webgl.render(this.scene, this.camera);
@@ -315,4 +327,28 @@ function findByPrefix(root, name) {
     if (!found && o.name.startsWith(name)) found = o;
   });
   return found;
+}
+
+/**
+ * Tách vật liệu của biển hiệu (để không ảnh hưởng vật khác) và trả về bộ điều khiển độ sáng:
+ * vật liệu có emissive thì phát sáng theo chính ảnh của biển, vật liệu cơ bản thì tăng độ sáng màu.
+ */
+function makeGlowable(object) {
+  const out = [];
+  object.traverse((o) => {
+    if (!o.isMesh) return;
+    o.material = Array.isArray(o.material) ? o.material.map((m) => m.clone()) : o.material.clone();
+    for (const m of [o.material].flat()) {
+      if (m.emissive) {
+        m.emissive.set(0xffffff);
+        if (m.map) m.emissiveMap = m.map;
+        m.emissiveIntensity = 0;
+        out.push({ set: (k) => (m.emissiveIntensity = 0.45 * k) });
+      } else if (m.color) {
+        const base = m.color.clone();
+        out.push({ set: (k) => m.color.copy(base).multiplyScalar(1 + 0.35 * k) });
+      }
+    }
+  });
+  return out;
 }
