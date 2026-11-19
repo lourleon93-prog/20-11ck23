@@ -8,6 +8,8 @@ import { resolve } from 'node:path';
 // (fonts được CSS import nên Vite tự đóng gói, không cần sao chép.)
 const STATIC_DIRS = ['models', 'images', 'data'];
 const STATIC_FILE_EXT = ['.exr', '.hdr'];
+// Bản gốc nặng không dùng trên web (web dùng bản nén trong models/optimized/)
+const EXCLUDE = ['models/CQT.glb', 'models/Thayy.glb', 'models/flower.glb'];
 
 function copyRootAssets() {
   let outDir;
@@ -21,7 +23,11 @@ function copyRootAssets() {
       const root = process.cwd();
       for (const dir of STATIC_DIRS) {
         const src = resolve(root, dir);
-        if (existsSync(src)) cpSync(src, resolve(outDir, dir), { recursive: true });
+        if (!existsSync(src)) continue;
+        cpSync(src, resolve(outDir, dir), {
+          recursive: true,
+          filter: (path) => !EXCLUDE.some((ex) => path === resolve(root, ex)),
+        });
       }
       for (const file of readdirSync(root)) {
         if (STATIC_FILE_EXT.some((ext) => file.toLowerCase().endsWith(ext))) {
