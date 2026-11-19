@@ -32,7 +32,8 @@ export class Renderer {
 
   onResize(fn) {
     this._resizeListeners.add(fn);
-    fn(this.size);
+    const size = this.size;
+    if (size.width && size.height) fn(size); // canvas chưa hiển thị (0x0) thì chờ ResizeObserver
     return () => this._resizeListeners.delete(fn);
   }
 

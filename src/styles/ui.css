@@ -1,0 +1,239 @@
+/* ===== View (mỗi phần của website) ===== */
+.view {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.view:not([hidden]),
+#view-home:not([hidden]) {
+  animation: view-in 0.5s ease both;
+}
+
+@keyframes view-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ===== Nút Home ===== */
+.home-btn {
+  position: absolute;
+  top: calc(12px + env(safe-area-inset-top));
+  left: calc(12px + env(safe-area-inset-left));
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--fg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  cursor: pointer;
+}
+
+.home-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* ===== Khung nội dung ===== */
+.panel {
+  --text-size: calc(1rem * var(--text-scale, 1));
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 33.333svh;
+  max-height: 49svh;
+  padding: 18px 22px calc(14px + env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  background: var(--bg);
+}
+
+.panel__inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}
+
+.panel__title {
+  margin: 0 0 0.5em;
+  font-weight: 700;
+  font-size: calc(var(--text-size) * 1.35);
+  line-height: 1.25;
+}
+
+.panel__body {
+  margin: 0;
+  font-size: var(--text-size);
+  line-height: 1.55;
+  white-space: pre-line;
+}
+
+.panel__inner.is-leaving {
+  opacity: 0;
+  transform: translateX(calc(var(--dir, 1) * -24px));
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.panel__inner.is-entering {
+  animation: panel-in 0.32s ease both;
+}
+
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(calc(var(--dir, 1) * 24px));
+  }
+}
+
+.panel__font {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 12px auto 0;
+  color: var(--muted);
+}
+
+.panel__font input {
+  width: min(160px, 45vw);
+  accent-color: var(--fg);
+}
+
+.panel__font-a {
+  font-weight: 700;
+  line-height: 1;
+}
+
+.panel__font-a--small {
+  font-size: 0.75rem;
+}
+
+.panel__font-a--large {
+  font-size: 1.15rem;
+}
+
+/* ===== Hướng dẫn (khung chớp nháy) ===== */
+.coach {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  background: rgba(255, 255, 255, 0.55);
+  transition: opacity 0.4s;
+}
+
+.coach.is-hidden {
+  opacity: 0;
+}
+
+.coach__message {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  width: min(86vw, 420px);
+  margin: 0;
+  padding: 16px 18px;
+  transform: translate(-50%, -50%);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.08);
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.coach__frame {
+  position: absolute;
+  border: 2px solid var(--fg);
+  border-radius: 12px;
+  pointer-events: none;
+  animation: coach-blink 2.4s ease-in-out infinite;
+}
+
+.coach__label {
+  position: absolute;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--fg);
+  color: #fff;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.coach__label--below {
+  transform: translateX(-50%);
+}
+
+.coach__label--above {
+  transform: translate(-50%, -100%);
+}
+
+.coach__label--right {
+  transform: translateY(-50%);
+}
+
+@keyframes coach-blink {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ===== Khung xem mô hình 3D ===== */
+.viewer {
+  position: absolute;
+  inset: 0;
+}
+
+.viewer__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+.viewer__loader {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  background: var(--bg);
+}
+
+/* ===== Trang tạm ===== */
+.coming-soon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  text-align: center;
+}
+
+.coming-soon h2 {
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+
+.coming-soon p {
+  margin: 0;
+  color: var(--muted);
+}

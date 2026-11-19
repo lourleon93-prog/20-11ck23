@@ -1,0 +1,80 @@
+.history {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+}
+
+.history__media {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+/* ===== Slide: chuyển mượt khi đổi mốc ===== */
+.slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(8%);
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s ease,
+    visibility 0s linear 0.45s;
+}
+
+.slide[data-side='prev'] {
+  transform: translateX(-8%);
+}
+
+.slide.is-active {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 0.45s ease,
+    transform 0.45s ease;
+}
+
+/* ===== Parallax ===== */
+.slide--parallax {
+  display: grid;
+  place-items: center;
+  container-type: size;
+}
+
+.parallax {
+  --ratio: 1.127;
+  position: relative;
+  width: min(100cqw, 100cqh * var(--ratio));
+  aspect-ratio: var(--ratio);
+  perspective: 900px;
+}
+
+.parallax__layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* ===== Ảnh tĩnh ===== */
+.slide--image {
+  display: grid;
+  place-items: center;
+  padding: calc(56px + env(safe-area-inset-top)) 20px 12px;
+}
+
+.slide--image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}

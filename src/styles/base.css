@@ -26,6 +26,10 @@
   --font-body: 'Product Sans', system-ui, sans-serif;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 *,
 *::before,
 *::after {

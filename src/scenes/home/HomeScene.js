@@ -81,6 +81,13 @@ export class HomeScene {
     this._visibility.observe(this.stage);
   }
 
+  /** Khi quay lại trang chủ từ một mục: hiện khu vực model và đưa camera về góc nhìn tổng thể. */
+  resume() {
+    if (!this.busy) return; // lần tải đầu: giữ nguyên vị trí (màn tiêu đề)
+    this.stage.scrollIntoView({ block: 'start' });
+    this.returnToOverview();
+  }
+
   /** Đưa camera về góc nhìn tổng thể và mở lại điều khiển. */
   async returnToOverview() {
     if (!this.overviewPose) return;
