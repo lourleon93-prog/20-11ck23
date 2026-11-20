@@ -70,6 +70,7 @@
       "mouse": "Bấm vào nút bên dưới để dâng hoa tưởng nhớ thầy"
     },
     "loading": "Đang tải sân trường, bạn đọc hướng dẫn trong lúc chờ nhé…",
-    "loadError": "Không tải được sân trường. Vui lòng kiểm tra mạng rồi thử lại."
+    "loadError": "Không tải được sân trường. Vui lòng kiểm tra mạng rồi thử lại.",
+    "gpuLost": "Điện thoại không đủ bộ nhớ để hiển thị sân trường. Bạn hãy đóng bớt các ứng dụng và tab khác, rồi tải lại trang."
   }
 }

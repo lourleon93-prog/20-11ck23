@@ -7,7 +7,7 @@
 export const SCHOOL_CONFIG = {
   // Bản tối ưu giữ nguyên ngoại hình (bản gốc vẫn ở models/), tạo bằng scripts/models/optimize.mjs.
   // Bản .mobile (nếu có) có sai số hình học dưới nửa điểm ảnh trên màn hình điện thoại.
-  model: { desktop: 'models/optimized/CQT.glb', mobile: 'models/optimized/CQT.glb' },
+  model: { desktop: 'models/optimized/CQT.glb', mobile: 'models/optimized/CQT.mobile.glb' },
   hdri: 'kloofendal_48d_partly_cloudy_puresky_1k.exr',
   exposure: 1,
 

@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 import waypointsJson from '../../../data/waypoints.json';
 import { Renderer } from '../../core/Renderer.js';
-import { loadGLTF } from '../../core/AssetLoader.js';
+import { loadGLTF, releaseImagesAfterUpload } from '../../core/AssetLoader.js';
 import { loadHDRI, isMobileDevice, limitTextureSize, freezeStatic } from '../../core/Environment.js';
 import { LookControls } from '../../camera/LookControls.js';
 import { createHomeButton, setHomeAttention } from '../../ui/HomeButton.js';
@@ -123,6 +123,14 @@ export class SchoolSection {
     });
     this.renderer.setFrameHandler((dt) => this._frame(dt));
     this._bindInput();
+    // Điện thoại hết bộ nhớ đồ hoạ (thường gặp trên iPhone đời cũ): báo rõ thay vì đứng hình
+    this.canvas.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault();
+      this.el.querySelector('.guide')?.remove();
+      this.loaderEl.classList.remove('is-hidden');
+      this.loaderBar.parentElement.hidden = true;
+      this.loaderText.textContent = t('school.gpuLost');
+    });
   }
 
   enter() {
@@ -180,6 +188,7 @@ export class SchoolSection {
       this.model = gltf.scene;
       if (this.mobile) {
         const n = limitTextureSize(this.model, cfg.mobileMaxTextureSize);
+        releaseImagesAfterUpload(this.model);
         if (n) console.info(`[School] Đã thu nhỏ ${n} texture cho điện thoại`);
       }
       this.scene.add(this.model);
@@ -426,7 +435,10 @@ export class SchoolSection {
     this.loaderBar.style.transform = 'scaleX(0)';
     try {
       await this.memorial.load((p) => this._progress(p));
-      if (this.mobile) limitTextureSize(this.memorial.scene, this.config.mobileMaxTextureSize);
+      if (this.mobile) {
+        limitTextureSize(this.memorial.scene, this.config.mobileMaxTextureSize);
+        releaseImagesAfterUpload(this.memorial.scene);
+      }
     } catch (err) {
       console.error(err);
       this.loaderText.textContent = 'Không tải được khu vực tưởng nhớ.';
