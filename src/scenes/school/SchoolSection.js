@@ -211,6 +211,7 @@ export class SchoolSection {
   }
 
   _progress(p) {
+    p = Math.max(0, Math.min(1, p));
     this._guide?.setProgress(p);
     this.loaderBar.style.transform = `scaleX(${p})`;
     this.loaderText.textContent = `Đang tải sân trường… ${Math.round(p * 100)}%`;

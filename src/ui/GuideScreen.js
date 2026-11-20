@@ -37,6 +37,7 @@ export function showGuideScreen(container, { title, cards, dismiss, waitFor, loa
   const dismissEl = el.querySelector('.guide__dismiss');
 
   const setProgress = (p) => {
+    p = Math.max(0, Math.min(1, p));
     loadingLabel.textContent = `${loadingText} ${Math.round(p * 100)}%`;
     bar.style.transform = `scaleX(${p})`;
   };
