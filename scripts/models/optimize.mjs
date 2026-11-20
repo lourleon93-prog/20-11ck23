@@ -7,7 +7,8 @@
 //   node --max-old-space-size=12000 optimize.mjs school <repo>/models/CQT.glb   <repo>/models/optimized/CQT.glb   <repo>/data/waypoints.json
 //   node --max-old-space-size=12000 optimize.mjs room   <repo>/models/Thayy.glb <repo>/models/optimized/Thayy.glb
 //   node --max-old-space-size=12000 optimize.mjs plain  <repo>/models/flower.glb <repo>/models/optimized/flower.glb
-//   Thêm --mobile để tạo bản cho điện thoại (sai số tính theo màn hình điện thoại dọc), vd.:
+//   Thêm --mobile để tạo bản cho điện thoại (sai số tính theo màn hình điện thoại dọc, ảnh màu ≤ 2048 px,
+//   ảnh dữ liệu ≤ 1024 px để vừa bộ nhớ Safari iOS), vd.:
 //   node --max-old-space-size=12000 optimize.mjs room <repo>/models/Thayy.glb <repo>/models/optimized/Thayy.mobile.glb --mobile
 //
 // Các bước:
@@ -231,14 +232,17 @@ if (profile === 'school') {
 }
 
 // ---------- 6. texture ----------
+// Bản điện thoại (--mobile): giới hạn kích thước ảnh ngay trong file để điện thoại (đặc biệt Safari iOS,
+// giới hạn bộ nhớ mỗi tab ~1–1.5 GB) không phải giải nén ảnh cỡ lớn. Ảnh màu ≤ 2048 px (như mức điện
+// thoại vốn tự thu nhỏ lúc chạy), ảnh dữ liệu (normal/ORM/specular) ≤ 1024 px. Máy tính giữ nguyên.
+const COLOR_SLOTS = /^(baseColorTexture|emissiveTexture|sheenColorTexture)$/;
+const SPEC_SLOTS = /^specularColorTexture$/;
+const DATA_SLOTS = /^(?!baseColorTexture$|emissiveTexture$|sheenColorTexture$|specularColorTexture$).*/;
+const fit = (n) => (MOBILE ? { resize: [n, n] } : {});
 await doc.transform(
-  textureCompress({
-    encoder: sharp,
-    targetFormat: 'webp',
-    slots: /^(baseColorTexture|emissiveTexture|specularColorTexture|sheenColorTexture)$/,
-    quality: 90,
-  }),
-  textureCompress({ encoder: sharp, targetFormat: 'webp', lossless: true }),
+  textureCompress({ encoder: sharp, targetFormat: 'webp', slots: COLOR_SLOTS, quality: 90, ...fit(2048) }),
+  textureCompress({ encoder: sharp, targetFormat: 'webp', slots: SPEC_SLOTS, quality: 90, ...fit(1024) }),
+  textureCompress({ encoder: sharp, targetFormat: 'webp', slots: DATA_SLOTS, lossless: true, ...fit(1024) }),
 );
 log('WebP xong');
 

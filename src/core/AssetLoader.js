@@ -57,7 +57,12 @@ export function loadGLTF(path, onProgress) {
     const promise = new Promise((resolve, reject) => {
       gltfLoader.load(
         url,
-        resolve,
+        (gltf) => {
+          // Bộ đọc giữ lại toàn bộ file .glb (hàng chục–trăm MB) trong bộ nhớ; không cần nữa thì bỏ
+          gltf.parser?.cache?.removeAll?.();
+          gltf.parser = null;
+          resolve(gltf);
+        },
         (e) => {
           if (onProgress && e.lengthComputable) onProgress(e.loaded / e.total);
         },
@@ -68,4 +73,38 @@ export function loadGLTF(path, onProgress) {
     cache.set(url, promise);
   }
   return cache.get(url);
+}
+
+/**
+ * Sau khi ảnh texture đã được đưa lên GPU, bỏ bản ảnh giải nén trong bộ nhớ thường.
+ * Trên iPhone bộ nhớ thường và bộ nhớ đồ hoạ dùng chung, nên việc này giảm gần một nửa bộ nhớ ảnh.
+ * Nhiều texture có thể dùng chung một ảnh gốc (Source): chỉ bỏ ảnh khi TẤT CẢ texture dùng ảnh đó
+ * đã lên GPU. (Chỉ dùng cho model tĩnh: texture không được cập nhật lại sau khi tải.)
+ */
+export function releaseImagesAfterUpload(root) {
+  const groups = new Map(); // Source -> Set<Texture> chưa lên GPU
+  root.traverse((obj) => {
+    if (!obj.isMesh) return;
+    for (const mat of [obj.material].flat()) {
+      for (const key of Object.keys(mat)) {
+        const tex = mat[key];
+        if (!tex?.isTexture || !tex.source) continue;
+        if (!groups.has(tex.source)) groups.set(tex.source, new Set());
+        groups.get(tex.source).add(tex);
+      }
+    }
+  });
+  for (const [source, pending] of groups) {
+    for (const tex of pending) {
+      const prev = tex.onUpdate;
+      tex.onUpdate = function (t) {
+        prev?.call(this, t);
+        t.onUpdate = prev ?? null;
+        pending.delete(t);
+        if (pending.size) return;
+        source.data?.close?.(); // ImageBitmap
+        source.data = null;
+      };
+    }
+  }
 }

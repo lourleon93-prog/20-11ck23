@@ -106,7 +106,8 @@ Câu nào có hai bản thì `"touch"` dùng cho điện thoại (chạm, chụm
 | `src/scenes/school/schoolConfig.js` | Mục 2: model, HDRI, kích thước quả cầu/chấm, giới hạn ở phòng tưởng nhớ, `mobileMaxTextureSize` |
 | `data/waypoints.json` | Toạ độ và liên kết các waypoint (trùng với các điểm `wp.*` trong CQT.glb) |
 
-Nếu điện thoại bị tải lại trang hoặc thoát khi vào Mục 2, giảm `mobileMaxTextureSize` từ `2048` xuống `1024`.
+Nếu điện thoại bị tải lại trang hoặc thoát khi vào Mục 2, cần tạo lại bản `*.mobile.glb` với giới hạn ảnh nhỏ hơn
+(sửa `fit(2048)` / `fit(1024)` trong `scripts/models/optimize.mjs`).
 
 ## 4. Đưa lên mạng (GitHub Pages)
 
@@ -122,7 +123,8 @@ model, nên hạn chế build lại liên tục.
 
 - `models/` – bản gốc (không sửa).
 - `models/optimized/` – bản tối ưu dùng trên web, giữ nguyên ngoại hình:
-  - `CQT.glb` (sân trường), `Thayy.glb` (phòng tưởng nhớ – máy tính), `Thayy.mobile.glb` (phòng tưởng nhớ – điện thoại), `flower.glb`.
+  - `CQT.glb` / `Thayy.glb`: bản cho máy tính; `CQT.mobile.glb` / `Thayy.mobile.glb`: bản cho điện thoại
+    (ảnh màu ≤ 2048 px, ảnh dữ liệu normal/ORM ≤ 1024 px để vừa bộ nhớ của Safari trên iPhone); `flower.glb`.
   - Gộp dữ liệu trùng, ảnh WebP (giữ độ phân giải), nén hình khối Meshopt, instancing cho vật lặp lại.
   - Chỉ giảm tam giác ở mesh cực dày (≥ 100 000 tam giác, vd. hoa trang trí, tán cây) với sai số dưới nửa điểm ảnh
     tại vị trí camera gần nhất có thể; đường viền hở (chữ, cánh hoa) được khoá nguyên.
