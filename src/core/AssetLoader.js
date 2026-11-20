@@ -58,13 +58,16 @@ export function loadGLTF(path, onProgress) {
       gltfLoader.load(
         url,
         (gltf) => {
+          onProgress?.(1);
           // Bộ đọc giữ lại toàn bộ file .glb (hàng chục–trăm MB) trong bộ nhớ; không cần nữa thì bỏ
           gltf.parser?.cache?.removeAll?.();
           gltf.parser = null;
           resolve(gltf);
         },
         (e) => {
-          if (onProgress && e.lengthComputable) onProgress(e.loaded / e.total);
+          // Máy chủ nén file khi gửi (gzip): "tổng" là dung lượng đã nén còn "đã nhận" là dung lượng
+          // sau giải nén, nên tỉ lệ có thể vượt 100%. Giữ tối đa 99% khi đang tải, xong mới báo 100%.
+          if (onProgress && e.lengthComputable && e.total > 0) onProgress(Math.min(e.loaded / e.total, 0.99));
         },
         (err) => reject(new Error(`Không tải được model "${path}": ${err?.message || err}`)),
       );
